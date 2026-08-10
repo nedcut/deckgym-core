@@ -18,6 +18,13 @@ pub struct ExportedDataPoint {
     pub chosen_action: Action,
 }
 
+/// Struct to hold the terminal outcome of a game
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportedGameOutcome {
+    pub game_id: String,
+    pub result: Option<GameOutcome>,
+}
+
 /// Event handler that exports (state, action) pairs to JSON files
 pub struct DataExporter {
     output_folder: PathBuf,
@@ -86,7 +93,31 @@ impl SimulationEventHandler for DataExporter {
         self.ply_counter += 1;
     }
 
-    fn on_game_end(&mut self, _game_id: Uuid, _state: State, _result: Option<GameOutcome>) {
+    fn on_game_end(&mut self, game_id: Uuid, _state: State, result: Option<GameOutcome>) {
+        // The exported plies only contain pre-action states, so the terminal outcome
+        // is never recoverable from them. Persist it alongside the plies.
+        let game_folder = self.output_folder.join(game_id.to_string());
+        if let Err(e) = fs::create_dir_all(&game_folder) {
+            warn!("Failed to create game folder {:?}: {}", game_folder, e);
+        }
+
+        let outcome = ExportedGameOutcome {
+            game_id: game_id.to_string(),
+            result,
+        };
+
+        let file_path = game_folder.join("outcome.json");
+        match serde_json::to_string_pretty(&outcome) {
+            Ok(json) => {
+                if let Err(e) = fs::write(&file_path, json) {
+                    warn!("Failed to write outcome file {:?}: {}", file_path, e);
+                }
+            }
+            Err(e) => {
+                warn!("Failed to serialize outcome for game {}: {}", game_id, e);
+            }
+        }
+
         // Reset for next game
         self.ply_counter = 0;
         self.current_game_id = None;
