@@ -582,16 +582,10 @@ pub fn get_ability_mechanic(card: &Card) -> Option<&'static AbilityMechanic> {
         return None;
     };
 
-    if let Some(ability) = &pokemon.ability {
-        let mechanic = ability_mechanic_from_effect(&ability.effect);
-        if let Some(mechanic) = mechanic {
-            Some(mechanic)
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    pokemon
+        .ability
+        .as_ref()
+        .and_then(|ability| ability_mechanic_from_effect(&ability.effect))
 }
 
 pub fn has_ability_mechanic(card: &Card, mechanic: &AbilityMechanic) -> bool {
