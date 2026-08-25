@@ -314,6 +314,9 @@ fn forecast_ability_by_mechanic(
         AbilityMechanic::QuickGrowth => {
             panic!("QuickGrowth is triggered at the end of the opponent's turn")
         }
+        AbilityMechanic::HealAllYourPokemonDuringCheckup { .. } => {
+            panic!("HealAllYourPokemonDuringCheckup is a passive ability triggered during Pokemon Checkup")
+        }
         AbilityMechanic::VictoryStarReflip => victory_star_reflip(),
     }
 }
