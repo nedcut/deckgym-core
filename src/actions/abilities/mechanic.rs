@@ -182,6 +182,12 @@ pub enum AbilityMechanic {
     EndTurnHealSelfIfActive {
         amount: u32,
     },
+    /// Garganacl's Blessed Salt: "During Pokémon Checkup, heal `amount` damage from each of your
+    /// Pokémon." Passive and unconditional — applies every Pokémon Checkup regardless of whether
+    /// this Pokémon is Active or Benched, as long as it's in play.
+    HealAllYourPokemonDuringCheckup {
+        amount: u32,
+    },
     CoinFlipSleepOpponentActive,
     DiscardFromHandToDrawCard,
     ImmuneToStatusConditions,

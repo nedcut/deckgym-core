@@ -110,6 +110,12 @@ fn forecast_pokemon_checkup(state: &State) -> (Probabilities, Mutations) {
                 finish_turn_after_checkup(state, rng);
 
                 start_mutation(rng, state, action);
+
+                // Some end-of-turn damage (e.g. Deceptive Needle) defers its knockout check so
+                // that abilities triggered in this same window (e.g. Caterpie's Quick Growth,
+                // applied by `start_mutation` above) get a chance to evolve — and thus save —
+                // the target before it is finally checked for being Knocked Out.
+                handle_knockouts(state, (action.actor, 0), false);
             }));
         }
     }
@@ -227,12 +233,16 @@ fn apply_pokemon_checkup(
         let attacking_ref = (player, in_play_idx); // present it as self-damage
         let poison_damage = get_poison_damage(mutated_state, player, in_play_idx);
 
-        handle_damage(
+        // Knockout checks are deferred to the end of the whole end-of-turn/checkup sequence (see
+        // `handle_knockouts` call in `forecast_pokemon_checkup`), so that other checkup effects
+        // (e.g. Garganacl's Blessed Salt heal, below) get a chance to apply before a Pokémon that
+        // took lethal damage here is actually removed from play.
+        handle_damage_only(
             mutated_state,
             attacking_ref,
             &[(poison_damage, player, in_play_idx)],
             false,
-            None,
+            DamageModifierContext::default(),
         );
     }
 
@@ -243,12 +253,13 @@ fn apply_pokemon_checkup(
         }
 
         let attacking_ref = (player, in_play_idx); // present it as self-damage
-        handle_damage(
+                                                   // Deferred knockout check — see comment above the poison damage call.
+        handle_damage_only(
             mutated_state,
             attacking_ref,
             &[(20, player, in_play_idx)],
             false,
-            None,
+            DamageModifierContext::default(),
         );
 
         let heals_from_burn = outcome[num_sleeps + i];
@@ -287,6 +298,8 @@ fn apply_pokemon_checkup(
         debug!("{player}'s Pokemon {in_play_idx} is un-paralyzed");
     }
 
+    apply_checkup_healing_abilities(mutated_state);
+
     apply_snowy_terrain_checkup_damage(mutated_state);
 
     // Shift the per-turn KO flag. Turn advancement (including energy rotation) is performed
@@ -300,6 +313,37 @@ fn apply_pokemon_checkup(
 
 fn finish_turn_after_checkup(state: &mut State, rng: &mut StdRng) {
     state.advance_turn(rng);
+}
+
+/// Garganacl's Blessed Salt: "During Pokémon Checkup, heal `amount` damage from each of your
+/// Pokémon." Applies once per in-play Pokémon with this ability (so it stacks if a player somehow
+/// has more than one in play), healing every one of that ability's owner's in-play Pokémon
+/// (Active and Benched).
+fn apply_checkup_healing_abilities(state: &mut State) {
+    let healers: Vec<(usize, u32)> = (0..2)
+        .flat_map(|player| {
+            state
+                .enumerate_in_play_pokemon(player)
+                .filter_map(
+                    move |(_, pokemon)| match get_ability_mechanic(&pokemon.card) {
+                        Some(AbilityMechanic::HealAllYourPokemonDuringCheckup { amount }) => {
+                            Some((player, *amount))
+                        }
+                        _ => None,
+                    },
+                )
+        })
+        .collect();
+
+    for (player, amount) in healers {
+        debug!(
+            "Blessed Salt: Healing {} damage from each of player {}'s Pokémon",
+            amount, player
+        );
+        for pokemon in state.in_play_pokemon[player].iter_mut().flatten() {
+            pokemon.heal(amount);
+        }
+    }
 }
 
 fn apply_snowy_terrain_checkup_damage(state: &mut State) {
@@ -331,12 +375,12 @@ fn apply_snowy_terrain_checkup_damage(state: &mut State) {
                 "Snowy Terrain: Player {} active Pokémon deals {} checkup damage to opponent active",
                 source_player, checkup_damage
             );
-            handle_damage(
+            handle_damage_only(
                 state,
                 (source_player, 0),
                 &[(checkup_damage, target_player, 0)],
                 false,
-                None,
+                DamageModifierContext::default(),
             );
         }
     }
@@ -352,7 +396,13 @@ fn apply_snowy_terrain_checkup_damage(state: &mut State) {
                 "Sand Slammer: Player {} active Pokémon deals {} checkup damage to all opponent Pokémon",
                 source_player, checkup_damage
             );
-            handle_damage(state, (source_player, 0), &targets, false, None);
+            handle_damage_only(
+                state,
+                (source_player, 0),
+                &targets,
+                false,
+                DamageModifierContext::default(),
+            );
         }
     }
 }

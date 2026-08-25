@@ -297,12 +297,13 @@ pub(crate) fn on_end_turn(player_ending_turn: usize, state: &mut State) {
         );
         // The opponent is the source of the delayed damage (they used the attack that caused it)
         let opponent = (player_ending_turn + 1) % 2;
-        crate::actions::handle_damage(
+        // Deferred knockout check — see the comment on `apply_deceptive_needle_damage` below.
+        crate::actions::handle_damage_only(
             state,
             (opponent, 0), // Opponent's active Pokemon as the source
             &[(total_delayed_damage, player_ending_turn, 0)], // Target is current player's active
             false,         // Not from an active attack (it's a delayed effect)
-            None,          // No attack name
+            DamageModifierContext::default(),
         );
     }
 
@@ -333,12 +334,13 @@ pub(crate) fn on_end_turn(player_ending_turn: usize, state: &mut State) {
             "Delayed spot damage: Applying {} damage to player {} slot {}",
             amount, target_player, target_in_play_idx
         );
-        crate::actions::handle_damage(
+        // Deferred knockout check — see the comment on `apply_deceptive_needle_damage` below.
+        crate::actions::handle_damage_only(
             state,
             (source_player, 0),
             &[(amount, target_player, target_in_play_idx)],
             false,
-            None,
+            DamageModifierContext::default(),
         );
     }
 
@@ -431,6 +433,14 @@ fn apply_leftovers_healing(player_ending_turn: usize, state: &mut State) {
 
 /// Deceptive Needle: At the end of your turn, if the [D] Pokémon this card is attached to is in
 /// the Active Spot, do 10 damage to your opponent's Active Pokémon.
+///
+/// The knockout check for this damage is deliberately deferred (see
+/// `crate::actions::handle_damage_only` vs. `handle_damage`): the opponent's Active Pokémon may
+/// have an ability like Caterpie's Quick Growth that also triggers "at the end of your
+/// opponent's turn" and evolves it before the between-turns knockout check runs. If the
+/// evolution raises its max HP above the damage already taken, it survives — even if the damage
+/// dealt here would otherwise have been lethal. The caller is responsible for running the
+/// deferred knockout check (`crate::actions::handle_knockouts`) after such abilities resolve.
 fn apply_deceptive_needle_damage(player_ending_turn: usize, state: &mut State) {
     let Some(active) = state.maybe_get_active(player_ending_turn) else {
         return;
@@ -445,12 +455,12 @@ fn apply_deceptive_needle_damage(player_ending_turn: usize, state: &mut State) {
         return;
     }
     debug!("Deceptive Needle: Doing 10 damage to opponent's Active Pokémon");
-    crate::actions::handle_damage(
+    crate::actions::handle_damage_only(
         state,
         (player_ending_turn, 0),
         &[(10, opponent, 0)],
         false,
-        None,
+        DamageModifierContext::default(),
     );
 }
 
@@ -507,12 +517,13 @@ fn apply_bad_dreams_damage(state: &mut State) {
             "Bad Dreams: Player {}'s Darkrai deals {} damage to opponent's Asleep active",
             darkrai_owner, amount
         );
-        crate::actions::handle_damage(
+        // Deferred knockout check — see the comment on `apply_deceptive_needle_damage` below.
+        crate::actions::handle_damage_only(
             state,
             (darkrai_owner, darkrai_idx),
             &[(amount, opponent, 0)],
             false,
-            None,
+            DamageModifierContext::default(),
         );
     }
 }

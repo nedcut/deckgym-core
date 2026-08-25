@@ -564,6 +564,12 @@ pub static EFFECT_ABILITY_MECHANIC_MAP: LazyLock<HashMap<&'static str, AbilityMe
             "At the end of your opponent's turn, if this Pokémon is in the Active Spot, put a random card from your deck that evolves from this Pokémon onto this Pokémon to evolve it.",
             AbilityMechanic::QuickGrowth,
         );
+
+        // b3a mechanics
+        map.insert(
+            "During Pokémon Checkup, heal 10 damage from each of your Pokémon.",
+            AbilityMechanic::HealAllYourPokemonDuringCheckup { amount: 10 },
+        );
         map
     });
 
