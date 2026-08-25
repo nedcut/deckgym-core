@@ -158,6 +158,8 @@ fn test_deceptive_needle_kos_plain_40_hp_pokemon_after_hoopa_ex_attack() {
         "Shadow Bullet should leave Rattata (40 HP) at 10 remaining HP"
     );
 
+    // TODO: attacking should really auto-sequence into ending the turn — the player shouldn't
+    // have to separately decide to end turn after there's nothing left to do but that.
     end_turn(&mut game, 0);
 
     let state = game.get_state_clone();
