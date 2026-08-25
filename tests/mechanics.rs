@@ -4,5 +4,7 @@ mod ability_effects_test;
 mod attack_effects_test;
 #[path = "mechanics/confusion_test.rs"]
 mod confusion_test;
+#[path = "mechanics/hoopa_ex_deceptive_needle_quick_growth_test.rs"]
+mod hoopa_ex_deceptive_needle_quick_growth_test;
 #[path = "mechanics/retreat_test.rs"]
 mod retreat_test;

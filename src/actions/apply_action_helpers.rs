@@ -110,6 +110,12 @@ fn forecast_pokemon_checkup(state: &State) -> (Probabilities, Mutations) {
                 finish_turn_after_checkup(state, rng);
 
                 start_mutation(rng, state, action);
+
+                // Some end-of-turn damage (e.g. Deceptive Needle) defers its knockout check so
+                // that abilities triggered in this same window (e.g. Caterpie's Quick Growth,
+                // applied by `start_mutation` above) get a chance to evolve — and thus save —
+                // the target before it is finally checked for being Knocked Out.
+                handle_knockouts(state, (action.actor, 0), false);
             }));
         }
     }

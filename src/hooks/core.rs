@@ -431,6 +431,14 @@ fn apply_leftovers_healing(player_ending_turn: usize, state: &mut State) {
 
 /// Deceptive Needle: At the end of your turn, if the [D] Pokémon this card is attached to is in
 /// the Active Spot, do 10 damage to your opponent's Active Pokémon.
+///
+/// The knockout check for this damage is deliberately deferred (see
+/// `crate::actions::handle_damage_only` vs. `handle_damage`): the opponent's Active Pokémon may
+/// have an ability like Caterpie's Quick Growth that also triggers "at the end of your
+/// opponent's turn" and evolves it before the between-turns knockout check runs. If the
+/// evolution raises its max HP above the damage already taken, it survives — even if the damage
+/// dealt here would otherwise have been lethal. The caller is responsible for running the
+/// deferred knockout check (`crate::actions::handle_knockouts`) after such abilities resolve.
 fn apply_deceptive_needle_damage(player_ending_turn: usize, state: &mut State) {
     let Some(active) = state.maybe_get_active(player_ending_turn) else {
         return;
@@ -445,12 +453,12 @@ fn apply_deceptive_needle_damage(player_ending_turn: usize, state: &mut State) {
         return;
     }
     debug!("Deceptive Needle: Doing 10 damage to opponent's Active Pokémon");
-    crate::actions::handle_damage(
+    crate::actions::handle_damage_only(
         state,
         (player_ending_turn, 0),
         &[(10, opponent, 0)],
         false,
-        None,
+        DamageModifierContext::default(),
     );
 }
 
