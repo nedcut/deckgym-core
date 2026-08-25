@@ -102,6 +102,7 @@ pub fn forecast_trainer_action(
         CardId::A2150Cyrus | CardId::A2190Cyrus | CardId::A4b326Cyrus | CardId::A4b327Cyrus => {
             Outcomes::single_fn(cyrus_effect)
         }
+        CardId::A3152Lana | CardId::A3194Lana => Outcomes::single_fn(lana_effect),
         CardId::A2155Mars | CardId::A2195Mars | CardId::A4b344Mars | CardId::A4b345Mars => {
             Outcomes::single_fn(mars_effect)
         }
@@ -658,6 +659,21 @@ fn cyrus_effect(_: &mut StdRng, state: &mut State, action: &Action) {
     let possible_moves = state
         .enumerate_bench_pokemon(opponent_player)
         .filter(|(_, x)| x.is_damaged())
+        .map(|(in_play_idx, _)| SimpleAction::Activate {
+            player: opponent_player,
+            in_play_idx,
+        })
+        .collect::<Vec<_>>();
+    state
+        .move_generation_stack
+        .push((action.actor, possible_moves));
+}
+
+fn lana_effect(_: &mut StdRng, state: &mut State, action: &Action) {
+    // Switch in 1 of your opponent's Benched Pokemon to the Active Spot.
+    let opponent_player = (action.actor + 1) % 2;
+    let possible_moves = state
+        .enumerate_bench_pokemon(opponent_player)
         .map(|(in_play_idx, _)| SimpleAction::Activate {
             player: opponent_player,
             in_play_idx,

@@ -18,6 +18,8 @@ mod jasmine_test;
 mod juliana_test;
 #[path = "trainers/korrina_cabbie_parasol_lady_test.rs"]
 mod korrina_cabbie_parasol_lady_test;
+#[path = "trainers/lana_test.rs"]
+mod lana_test;
 #[path = "trainers/mallow_test.rs"]
 mod mallow_test;
 #[path = "trainers/marlon_test.rs"]
