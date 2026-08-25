@@ -108,6 +108,7 @@ pub fn trainer_move_generation_implementation(
         CardId::A2150Cyrus | CardId::A2190Cyrus | CardId::A4b326Cyrus | CardId::A4b327Cyrus => {
             can_play_cyrus(state, trainer_card)
         }
+        CardId::A3152Lana | CardId::A3194Lana => can_play_lana(state, trainer_card),
         CardId::A2155Mars | CardId::A2195Mars | CardId::A4b344Mars | CardId::A4b345Mars => {
             can_play_trainer(state, trainer_card)
         }
@@ -505,6 +506,20 @@ fn can_play_cyrus(state: &State, trainer_card: &TrainerCard) -> Option<Vec<Simpl
         .filter(|(_, x)| x.is_damaged())
         .count();
     if damaged_bench_count > 0 {
+        can_play_trainer(state, trainer_card)
+    } else {
+        cannot_play_trainer()
+    }
+}
+
+/// Check if Lana can be played (requires Araquanid in play and opponent to have a benched pokemon)
+fn can_play_lana(state: &State, trainer_card: &TrainerCard) -> Option<Vec<SimpleAction>> {
+    let has_araquanid = state
+        .enumerate_in_play_pokemon(state.current_player)
+        .any(|(_, pokemon)| pokemon.get_name() == "Araquanid");
+    let opponent = (state.current_player + 1) % 2;
+    let opponent_has_bench = state.enumerate_bench_pokemon(opponent).count() > 0;
+    if has_araquanid && opponent_has_bench {
         can_play_trainer(state, trainer_card)
     } else {
         cannot_play_trainer()
