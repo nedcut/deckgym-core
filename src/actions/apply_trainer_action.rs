@@ -223,6 +223,9 @@ pub fn forecast_trainer_action(
         CardId::B4153Wally | CardId::B4193Wally => Outcomes::single_fn(wally_effect),
         CardId::B4150Psychic | CardId::B4190Psychic => Outcomes::single_fn(psychic_effect),
         CardId::B4151Drayden | CardId::B4191Drayden => Outcomes::single_fn(drayden_effect),
+        CardId::B4a070TeamRocketsMasterPlan
+        | CardId::B4a086TeamRocketsMasterPlan
+        | CardId::B4a094TeamRocketsMasterPlan => team_rockets_master_plan_outcomes(),
         _ => panic!("Unsupported Trainer Card"),
     }
 }
@@ -1289,6 +1292,21 @@ fn drayden_effect(_: &mut StdRng, state: &mut State, _: &Action) {
         },
         0,
     );
+}
+
+/// Team Rocket's Master Plan: opponent's Active Pokémon is now Confused. Flip a coin. If tails,
+/// your Active Pokémon is now also Confused.
+fn team_rockets_master_plan_outcomes() -> Outcomes {
+    let heads_mutation = Box::new(|_: &mut StdRng, state: &mut State, action: &Action| {
+        let opponent = (action.actor + 1) % 2;
+        state.apply_status_condition(opponent, 0, StatusCondition::Confused);
+    });
+    let tails_mutation = Box::new(|_: &mut StdRng, state: &mut State, action: &Action| {
+        let opponent = (action.actor + 1) % 2;
+        state.apply_status_condition(opponent, 0, StatusCondition::Confused);
+        state.apply_status_condition(action.actor, 0, StatusCondition::Confused);
+    });
+    Outcomes::binary_coin(heads_mutation, tails_mutation)
 }
 
 fn psychic_effect(_: &mut StdRng, state: &mut State, action: &Action) {

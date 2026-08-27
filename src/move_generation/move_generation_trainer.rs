@@ -256,6 +256,9 @@ pub fn trainer_move_generation_implementation(
         CardId::B4153Wally | CardId::B4193Wally => can_play_wally(state, trainer_card),
         CardId::B4150Psychic | CardId::B4190Psychic => can_play_psychic(state, trainer_card),
         CardId::B4151Drayden | CardId::B4191Drayden => can_play_trainer(state, trainer_card),
+        CardId::B4a070TeamRocketsMasterPlan
+        | CardId::B4a086TeamRocketsMasterPlan
+        | CardId::B4a094TeamRocketsMasterPlan => can_play_trainer(state, trainer_card),
         _ => None,
     }
 }
