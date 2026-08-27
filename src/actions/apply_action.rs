@@ -234,6 +234,9 @@ pub fn forecast_action(state: &State, action: &Action) -> Outcomes {
             forecast_discard_opponent_supporter(action.actor, supporter_card)
         }
         SimpleAction::DiscardOwnCards { cards } => forecast_discard_own_cards(action.actor, cards),
+        SimpleAction::BenchOpponentPokemonFromHand { cards } => {
+            forecast_bench_opponent_pokemon_from_hand(action.actor, cards)
+        }
         SimpleAction::AttachFromDiscard {
             in_play_idx,
             num_random_energies,
@@ -948,6 +951,29 @@ fn forecast_discard_own_cards(acting_player: usize, cards: &[Card]) -> Outcomes 
             state.discard_card_from_hand(acting_player, card);
         }
         debug!("Discarded {:?} from hand", cards_clone);
+    })
+}
+
+/// Team Rocket's Boss: put the chosen Basic Pokémon found in the opponent's hand onto the
+/// opponent's Bench.
+fn forecast_bench_opponent_pokemon_from_hand(acting_player: usize, cards: &[Card]) -> Outcomes {
+    let cards_clone = cards.to_vec();
+    Outcomes::single_fn(move |_rng, state, _action| {
+        let opponent = (acting_player + 1) % 2;
+        for card in &cards_clone {
+            let Some(bench_idx) = state.in_play_pokemon[opponent]
+                .iter()
+                .position(|slot| slot.is_none())
+            else {
+                debug!("No bench space available, skipping remaining Pokemon");
+                break;
+            };
+            apply_place_card(state, opponent, card, bench_idx, false);
+        }
+        debug!(
+            "Team Rocket's Boss: Put {:?} from opponent's hand onto their Bench",
+            cards_clone
+        );
     })
 }
 

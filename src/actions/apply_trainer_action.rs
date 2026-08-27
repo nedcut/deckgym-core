@@ -18,7 +18,7 @@ use crate::{
         psychic_energy_sources, quick_grow_extract_candidates, wallace_candidates,
     },
     combinatorics::generate_combinations,
-    effects::TurnEffect,
+    effects::{CardEffect, TurnEffect},
     hooks::{get_stage, is_ancient_pokemon, is_future_pokemon, is_ultra_beast},
     models::{Card, EnergyType, StatusCondition, TrainerCard, TrainerType},
     tools::{enumerate_tool_choices, is_tool_effect_implemented},
@@ -223,6 +223,21 @@ pub fn forecast_trainer_action(
         CardId::B4153Wally | CardId::B4193Wally => Outcomes::single_fn(wally_effect),
         CardId::B4150Psychic | CardId::B4190Psychic => Outcomes::single_fn(psychic_effect),
         CardId::B4151Drayden | CardId::B4191Drayden => Outcomes::single_fn(drayden_effect),
+        CardId::B4a070TeamRocketsMasterPlan
+        | CardId::B4a086TeamRocketsMasterPlan
+        | CardId::B4a094TeamRocketsMasterPlan => team_rockets_master_plan_outcomes(),
+        CardId::B4a067TeamRocketsThievingMachine => {
+            team_rockets_thieving_machine_effect(acting_player, state)
+        }
+        CardId::B4a068TeamRocketsGoozooka | CardId::B4a110TeamRocketsGoozooka => {
+            Outcomes::single_fn(team_rockets_goozooka_effect)
+        }
+        CardId::B4a069TeamRocketsResearcher | CardId::B4a085TeamRocketsResearcher => {
+            team_rockets_researcher_outcomes()
+        }
+        CardId::B4a071TeamRocketsBoss | CardId::B4a087TeamRocketsBoss => {
+            Outcomes::single_fn(team_rockets_boss_effect)
+        }
         _ => panic!("Unsupported Trainer Card"),
     }
 }
@@ -1291,6 +1306,21 @@ fn drayden_effect(_: &mut StdRng, state: &mut State, _: &Action) {
     );
 }
 
+/// Team Rocket's Master Plan: opponent's Active Pokémon is now Confused. Flip a coin. If tails,
+/// your Active Pokémon is now also Confused.
+fn team_rockets_master_plan_outcomes() -> Outcomes {
+    let heads_mutation = Box::new(|_: &mut StdRng, state: &mut State, action: &Action| {
+        let opponent = (action.actor + 1) % 2;
+        state.apply_status_condition(opponent, 0, StatusCondition::Confused);
+    });
+    let tails_mutation = Box::new(|_: &mut StdRng, state: &mut State, action: &Action| {
+        let opponent = (action.actor + 1) % 2;
+        state.apply_status_condition(opponent, 0, StatusCondition::Confused);
+        state.apply_status_condition(action.actor, 0, StatusCondition::Confused);
+    });
+    Outcomes::binary_coin(heads_mutation, tails_mutation)
+}
+
 fn psychic_effect(_: &mut StdRng, state: &mut State, action: &Action) {
     // Choose 1 of your opponent's Benched Pokémon and move a random Energy from it to your
     // opponent's Active Pokémon.
@@ -1499,6 +1529,106 @@ fn celestic_town_elder_effect(acting_player: usize, state: &State) -> Outcomes {
     }
 
     Outcomes::from_parts(probabilities, outcomes)
+}
+
+/// Team Rocket's Thieving Machine: put a random Item card, except any Team Rocket's Thieving
+/// Machine, from your opponent's discard pile into your hand.
+fn team_rockets_thieving_machine_effect(acting_player: usize, state: &State) -> Outcomes {
+    let opponent = (acting_player + 1) % 2;
+    let eligible_items: Vec<Card> = state.discard_piles[opponent]
+        .iter()
+        .filter(|card| {
+            matches!(card, Card::Trainer(t) if t.trainer_card_type == TrainerType::Item && t.name != "Team Rocket's Thieving Machine")
+        })
+        .cloned()
+        .collect();
+
+    if eligible_items.is_empty() {
+        // No eligible Item in the opponent's discard pile, nothing to do
+        return Outcomes::single_fn(|_, _, _| {});
+    }
+
+    let num_outcomes = eligible_items.len();
+    let probabilities = vec![1.0 / (num_outcomes as f64); num_outcomes];
+    let mut outcomes: Mutations = vec![];
+
+    for item in eligible_items {
+        outcomes.push(Box::new(move |_, state, action| {
+            let opponent = (action.actor + 1) % 2;
+            if let Some(idx) = state.discard_piles[opponent]
+                .iter()
+                .position(|card| card == &item)
+            {
+                state.discard_piles[opponent].remove(idx);
+                state.hands[action.actor].push(item.clone());
+            }
+        }));
+    }
+
+    Outcomes::from_parts(probabilities, outcomes)
+}
+
+/// Team Rocket's Goo-zooka: until the end of your opponent's next turn, your opponent's Active
+/// Pokémon's Retreat Cost is 1 more.
+fn team_rockets_goozooka_effect(_: &mut StdRng, state: &mut State, action: &Action) {
+    let opponent = (action.actor + 1) % 2;
+    state
+        .get_active_mut(opponent)
+        .add_effect(CardEffect::IncreasedRetreatCost { amount: 1 }, 1);
+}
+
+/// Team Rocket's Boss: look at your opponent's hand and put any number of Basic Pokémon you find
+/// there onto your opponent's Bench.
+fn team_rockets_boss_effect(_: &mut StdRng, state: &mut State, action: &Action) {
+    let player = action.actor;
+    let opponent = (player + 1) % 2;
+    let eligible: Vec<Card> = state.hands[opponent]
+        .iter()
+        .filter(|card| card.is_basic())
+        .cloned()
+        .collect();
+    let free_bench_slots = state.in_play_pokemon[opponent]
+        .iter()
+        .filter(|slot| slot.is_none())
+        .count();
+    let max_to_bench = min(eligible.len(), free_bench_slots);
+
+    if max_to_bench == 0 {
+        return;
+    }
+
+    let choices: Vec<SimpleAction> = (0..=max_to_bench)
+        .flat_map(|k| generate_combinations(&eligible, k))
+        .map(|cards| SimpleAction::BenchOpponentPokemonFromHand { cards })
+        .collect();
+    state.move_generation_stack.push((player, choices));
+}
+
+/// Team Rocket's Researcher: flip a coin until you get tails. For each heads, put a random
+/// Pokémon that has "Team Rocket" in its name from your deck into your hand.
+fn team_rockets_researcher_outcomes() -> Outcomes {
+    // Flip coins until tails - capped at 5 heads for practicality (mirrors Vaporeon's Hyper
+    // Whirlpool). Which specific matching card is pulled for each heads is picked deterministically
+    // (instead of branching over every combination) to avoid exploding the game tree; the deck is
+    // reshuffled afterwards so this doesn't leak deck order.
+    Outcomes::geometric_until_tails(5, move |heads| {
+        Box::new(move |rng, state, action| {
+            let player = action.actor;
+            let mut eligible: Vec<Card> = state.decks[player]
+                .cards
+                .iter()
+                .filter(|card| card.get_name().contains("Team Rocket"))
+                .cloned()
+                .collect();
+            for _ in 0..heads {
+                let Some(card) = eligible.pop() else {
+                    break;
+                };
+                state.transfer_card_from_deck_to_hand(player, &card);
+            }
+            state.decks[player].shuffle(false, rng);
+        })
+    })
 }
 
 fn nemona_effect(_: &mut StdRng, state: &mut State, _: &Action) {

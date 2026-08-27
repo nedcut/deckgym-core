@@ -256,6 +256,21 @@ pub fn trainer_move_generation_implementation(
         CardId::B4153Wally | CardId::B4193Wally => can_play_wally(state, trainer_card),
         CardId::B4150Psychic | CardId::B4190Psychic => can_play_psychic(state, trainer_card),
         CardId::B4151Drayden | CardId::B4191Drayden => can_play_trainer(state, trainer_card),
+        CardId::B4a070TeamRocketsMasterPlan
+        | CardId::B4a086TeamRocketsMasterPlan
+        | CardId::B4a094TeamRocketsMasterPlan => can_play_trainer(state, trainer_card),
+        CardId::B4a067TeamRocketsThievingMachine => {
+            can_play_team_rockets_thieving_machine(state, trainer_card)
+        }
+        CardId::B4a068TeamRocketsGoozooka | CardId::B4a110TeamRocketsGoozooka => {
+            can_play_trainer(state, trainer_card)
+        }
+        CardId::B4a069TeamRocketsResearcher | CardId::B4a085TeamRocketsResearcher => {
+            can_play_trainer(state, trainer_card)
+        }
+        CardId::B4a071TeamRocketsBoss | CardId::B4a087TeamRocketsBoss => {
+            can_play_trainer(state, trainer_card)
+        }
         _ => None,
     }
 }
@@ -831,6 +846,27 @@ fn can_play_diantha(state: &State, trainer_card: &TrainerCard) -> Option<Vec<Sim
     } else {
         cannot_play_trainer()
     }
+}
+
+/// Check if Team Rocket's Thieving Machine can be played (requires an Item card, other than
+/// itself, in the opponent's discard pile)
+fn can_play_team_rockets_thieving_machine(
+    state: &State,
+    trainer_card: &TrainerCard,
+) -> Option<Vec<SimpleAction>> {
+    let opponent = (state.current_player + 1) % 2;
+    let has_target = state.discard_piles[opponent]
+        .iter()
+        .any(is_thieving_machine_eligible_item);
+    if has_target {
+        can_play_trainer(state, trainer_card)
+    } else {
+        cannot_play_trainer()
+    }
+}
+
+fn is_thieving_machine_eligible_item(card: &Card) -> bool {
+    matches!(card, Card::Trainer(t) if t.trainer_card_type == TrainerType::Item && t.name != "Team Rocket's Thieving Machine")
 }
 
 /// Check if Celestic Town Elder can be played (requires at least 1 Basic Pokemon in discard pile)

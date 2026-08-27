@@ -36,6 +36,16 @@ mod psychic_test;
 mod puppy_loving_girl_test;
 #[path = "trainers/skyla_test.rs"]
 mod skyla_test;
+#[path = "trainers/team_rockets_boss_test.rs"]
+mod team_rockets_boss_test;
+#[path = "trainers/team_rockets_goozooka_test.rs"]
+mod team_rockets_goozooka_test;
+#[path = "trainers/team_rockets_master_plan_test.rs"]
+mod team_rockets_master_plan_test;
+#[path = "trainers/team_rockets_researcher_test.rs"]
+mod team_rockets_researcher_test;
+#[path = "trainers/team_rockets_thieving_machine_test.rs"]
+mod team_rockets_thieving_machine_test;
 #[path = "trainers/volkner_test.rs"]
 mod volkner_test;
 #[path = "trainers/wallace_test.rs"]
