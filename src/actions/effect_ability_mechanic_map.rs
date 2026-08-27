@@ -237,6 +237,10 @@ pub static EFFECT_ABILITY_MECHANIC_MAP: LazyLock<HashMap<&'static str, AbilityMe
             AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve,
         );
         map.insert(
+            "Once during your turn, when you play this Pokémon from your hand to evolve 1 of your Pokémon, you may move a random Energy from your opponent's Active Pokémon to this Pokémon.",
+            AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve,
+        );
+        map.insert(
             "Once during your turn, when you play this Pokémon from your hand to evolve 1 of your Pokémon, you may flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.",
             AbilityMechanic::CoinFlipParalyzeOpponentActiveOnEvolve,
         );

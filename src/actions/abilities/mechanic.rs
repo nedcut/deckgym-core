@@ -246,6 +246,12 @@ pub enum AbilityMechanic {
     /// Pokémon from your hand to evolve 1 of your Pokémon, you may make your opponent's Active
     /// Pokémon Poisoned and Burned."
     PoisonAndBurnOpponentActiveOnEvolve,
+    /// Team Rocket's Raticate ex's Thieving Incisors: "Once during your turn, when you play this
+    /// Pokémon from your hand to evolve 1 of your Pokémon, you may move a random Energy from your
+    /// opponent's Active Pokémon to this Pokémon." Mirrors the "move the last-attached Energy
+    /// instead of a random one" simplification used elsewhere (e.g.
+    /// `DiscardRandomEnergyFromOpponentActiveOnEvolve`).
+    MoveRandomEnergyFromOpponentActiveToSelfOnEvolve,
     CanEvolveIntoEeveeEvolution,
     CanEvolveOnFirstTurnIfActive,
     CounterattackDamage {

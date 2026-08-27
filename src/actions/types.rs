@@ -173,6 +173,11 @@ pub enum SimpleAction {
     ApplyStatusToOpponentActive {
         condition: StatusCondition,
     },
+    /// Team Rocket's Raticate ex's Thieving Incisors: move the last-attached Energy from the
+    /// opponent's Active Pokémon to `to_in_play_idx` on the actor's own board.
+    MoveOpponentActiveEnergyToSelf {
+        to_in_play_idx: usize,
+    },
     /// Team Rocket's Weezing ex's Boiler Smog: apply ALL of these Special Conditions at once to
     /// the opponent's Active Pokémon (e.g. Poisoned and Burned together).
     ApplyStatusesToOpponentActive {
@@ -356,6 +361,9 @@ impl fmt::Display for SimpleAction {
             }
             SimpleAction::ApplyStatusesToOpponentActive { conditions } => {
                 write!(f, "ApplyStatusesToOpponentActive({conditions:?})")
+            }
+            SimpleAction::MoveOpponentActiveEnergyToSelf { to_in_play_idx } => {
+                write!(f, "MoveOpponentActiveEnergyToSelf({to_in_play_idx})")
             }
             SimpleAction::Noop => write!(f, "Noop"),
         }

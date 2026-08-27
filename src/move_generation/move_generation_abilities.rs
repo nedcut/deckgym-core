@@ -185,6 +185,7 @@ fn can_use_ability_by_mechanic(
         AbilityMechanic::CoinFlipParalyzeOpponentActiveOnEvolve => false,
         AbilityMechanic::DiscardRandomEnergyFromOpponentActiveOnEvolve => false,
         AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve => false,
+        AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve => false,
         AbilityMechanic::CanEvolveIntoEeveeEvolution => false,
         AbilityMechanic::CanEvolveOnFirstTurnIfActive => false,
         AbilityMechanic::CounterattackDamage { .. } => false,

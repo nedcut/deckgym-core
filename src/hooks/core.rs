@@ -215,6 +215,23 @@ pub(crate) fn on_evolve(
                 ],
             ));
         }
+        Some(AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve) => {
+            let opponent = (actor + 1) % 2;
+            let has_energy = state
+                .maybe_get_active(opponent)
+                .is_some_and(|active| !active.attached_energy.is_empty());
+            if has_energy {
+                state.move_generation_stack.push((
+                    actor,
+                    vec![
+                        SimpleAction::MoveOpponentActiveEnergyToSelf {
+                            to_in_play_idx: in_play_idx,
+                        },
+                        SimpleAction::Noop,
+                    ],
+                ));
+            }
+        }
         _ => {}
     }
 }

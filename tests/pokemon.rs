@@ -292,6 +292,8 @@ mod tandemaus_b2_test;
 mod tapu_lele_energy_arrow_test;
 #[path = "pokemon/team_rockets_moltres_ex_heat_charged_test.rs"]
 mod team_rockets_moltres_ex_heat_charged_test;
+#[path = "pokemon/team_rockets_raticate_ex_test.rs"]
+mod team_rockets_raticate_ex_test;
 #[path = "pokemon/team_rockets_slowking_ex_test.rs"]
 mod team_rockets_slowking_ex_test;
 #[path = "pokemon/team_rockets_weezing_ex_test.rs"]

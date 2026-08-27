@@ -272,6 +272,9 @@ fn forecast_ability_by_mechanic(
         AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve => {
             panic!("PoisonAndBurnOpponentActiveOnEvolve is triggered on evolve")
         }
+        AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve => {
+            panic!("MoveRandomEnergyFromOpponentActiveToSelfOnEvolve is triggered on evolve")
+        }
         AbilityMechanic::CanEvolveIntoEeveeEvolution => {
             panic!("CanEvolveIntoEeveeEvolution is a passive ability")
         }
