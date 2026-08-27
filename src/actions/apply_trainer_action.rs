@@ -226,6 +226,9 @@ pub fn forecast_trainer_action(
         CardId::B4a070TeamRocketsMasterPlan
         | CardId::B4a086TeamRocketsMasterPlan
         | CardId::B4a094TeamRocketsMasterPlan => team_rockets_master_plan_outcomes(),
+        CardId::B4a067TeamRocketsThievingMachine => {
+            team_rockets_thieving_machine_effect(acting_player, state)
+        }
         _ => panic!("Unsupported Trainer Card"),
     }
 }
@@ -1512,6 +1515,43 @@ fn celestic_town_elder_effect(acting_player: usize, state: &State) -> Outcomes {
             {
                 state.discard_piles[action.actor].remove(idx);
                 state.hands[action.actor].push(pokemon.clone());
+            }
+        }));
+    }
+
+    Outcomes::from_parts(probabilities, outcomes)
+}
+
+/// Team Rocket's Thieving Machine: put a random Item card, except any Team Rocket's Thieving
+/// Machine, from your opponent's discard pile into your hand.
+fn team_rockets_thieving_machine_effect(acting_player: usize, state: &State) -> Outcomes {
+    let opponent = (acting_player + 1) % 2;
+    let eligible_items: Vec<Card> = state.discard_piles[opponent]
+        .iter()
+        .filter(|card| {
+            matches!(card, Card::Trainer(t) if t.trainer_card_type == TrainerType::Item && t.name != "Team Rocket's Thieving Machine")
+        })
+        .cloned()
+        .collect();
+
+    if eligible_items.is_empty() {
+        // No eligible Item in the opponent's discard pile, nothing to do
+        return Outcomes::single_fn(|_, _, _| {});
+    }
+
+    let num_outcomes = eligible_items.len();
+    let probabilities = vec![1.0 / (num_outcomes as f64); num_outcomes];
+    let mut outcomes: Mutations = vec![];
+
+    for item in eligible_items {
+        outcomes.push(Box::new(move |_, state, action| {
+            let opponent = (action.actor + 1) % 2;
+            if let Some(idx) = state.discard_piles[opponent]
+                .iter()
+                .position(|card| card == &item)
+            {
+                state.discard_piles[opponent].remove(idx);
+                state.hands[action.actor].push(item.clone());
             }
         }));
     }

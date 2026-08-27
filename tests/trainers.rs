@@ -38,6 +38,8 @@ mod puppy_loving_girl_test;
 mod skyla_test;
 #[path = "trainers/team_rockets_master_plan_test.rs"]
 mod team_rockets_master_plan_test;
+#[path = "trainers/team_rockets_thieving_machine_test.rs"]
+mod team_rockets_thieving_machine_test;
 #[path = "trainers/volkner_test.rs"]
 mod volkner_test;
 #[path = "trainers/wallace_test.rs"]

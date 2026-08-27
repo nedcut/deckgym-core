@@ -259,6 +259,9 @@ pub fn trainer_move_generation_implementation(
         CardId::B4a070TeamRocketsMasterPlan
         | CardId::B4a086TeamRocketsMasterPlan
         | CardId::B4a094TeamRocketsMasterPlan => can_play_trainer(state, trainer_card),
+        CardId::B4a067TeamRocketsThievingMachine => {
+            can_play_team_rockets_thieving_machine(state, trainer_card)
+        }
         _ => None,
     }
 }
@@ -834,6 +837,27 @@ fn can_play_diantha(state: &State, trainer_card: &TrainerCard) -> Option<Vec<Sim
     } else {
         cannot_play_trainer()
     }
+}
+
+/// Check if Team Rocket's Thieving Machine can be played (requires an Item card, other than
+/// itself, in the opponent's discard pile)
+fn can_play_team_rockets_thieving_machine(
+    state: &State,
+    trainer_card: &TrainerCard,
+) -> Option<Vec<SimpleAction>> {
+    let opponent = (state.current_player + 1) % 2;
+    let has_target = state.discard_piles[opponent]
+        .iter()
+        .any(is_thieving_machine_eligible_item);
+    if has_target {
+        can_play_trainer(state, trainer_card)
+    } else {
+        cannot_play_trainer()
+    }
+}
+
+fn is_thieving_machine_eligible_item(card: &Card) -> bool {
+    matches!(card, Card::Trainer(t) if t.trainer_card_type == TrainerType::Item && t.name != "Team Rocket's Thieving Machine")
 }
 
 /// Check if Celestic Town Elder can be played (requires at least 1 Basic Pokemon in discard pile)
