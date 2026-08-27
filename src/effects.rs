@@ -15,6 +15,10 @@ pub enum CardEffect {
     IncreasedAttackCost {
         amount: u8,
     },
+    /// This Pokémon's Retreat Cost is `amount` more (e.g. Team Rocket's Goo-zooka).
+    IncreasedRetreatCost {
+        amount: u8,
+    },
     CannotAttack,
     CannotUseAttack(String),
     IncreasedDamageForAttack {

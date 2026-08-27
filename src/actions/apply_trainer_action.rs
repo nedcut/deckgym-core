@@ -18,7 +18,7 @@ use crate::{
         psychic_energy_sources, quick_grow_extract_candidates, wallace_candidates,
     },
     combinatorics::generate_combinations,
-    effects::TurnEffect,
+    effects::{CardEffect, TurnEffect},
     hooks::{get_stage, is_ancient_pokemon, is_future_pokemon, is_ultra_beast},
     models::{Card, EnergyType, StatusCondition, TrainerCard, TrainerType},
     tools::{enumerate_tool_choices, is_tool_effect_implemented},
@@ -228,6 +228,9 @@ pub fn forecast_trainer_action(
         | CardId::B4a094TeamRocketsMasterPlan => team_rockets_master_plan_outcomes(),
         CardId::B4a067TeamRocketsThievingMachine => {
             team_rockets_thieving_machine_effect(acting_player, state)
+        }
+        CardId::B4a068TeamRocketsGoozooka | CardId::B4a110TeamRocketsGoozooka => {
+            Outcomes::single_fn(team_rockets_goozooka_effect)
         }
         _ => panic!("Unsupported Trainer Card"),
     }
@@ -1557,6 +1560,15 @@ fn team_rockets_thieving_machine_effect(acting_player: usize, state: &State) -> 
     }
 
     Outcomes::from_parts(probabilities, outcomes)
+}
+
+/// Team Rocket's Goo-zooka: until the end of your opponent's next turn, your opponent's Active
+/// Pokémon's Retreat Cost is 1 more.
+fn team_rockets_goozooka_effect(_: &mut StdRng, state: &mut State, action: &Action) {
+    let opponent = (action.actor + 1) % 2;
+    state
+        .get_active_mut(opponent)
+        .add_effect(CardEffect::IncreasedRetreatCost { amount: 1 }, 1);
 }
 
 fn nemona_effect(_: &mut StdRng, state: &mut State, _: &Action) {

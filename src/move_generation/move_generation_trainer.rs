@@ -262,6 +262,9 @@ pub fn trainer_move_generation_implementation(
         CardId::B4a067TeamRocketsThievingMachine => {
             can_play_team_rockets_thieving_machine(state, trainer_card)
         }
+        CardId::B4a068TeamRocketsGoozooka | CardId::B4a110TeamRocketsGoozooka => {
+            can_play_trainer(state, trainer_card)
+        }
         _ => None,
     }
 }

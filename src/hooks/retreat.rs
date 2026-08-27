@@ -30,6 +30,17 @@ pub(crate) fn get_retreat_cost(state: &State, card: &PlayedCard) -> Vec<EnergyTy
             return vec![];
         }
         let mut normal_cost = pokemon_card.retreat_cost.clone();
+        let retreat_cost_increase: u8 = card
+            .get_effective_card_effects()
+            .iter()
+            .map(|effect| match effect {
+                CardEffect::IncreasedRetreatCost { amount } => *amount,
+                _ => 0,
+            })
+            .sum();
+        for _ in 0..retreat_cost_increase {
+            normal_cost.push(EnergyType::Colorless);
+        }
         if has_tool(card, CardId::A4a067InflatableBoat)
             && card.get_energy_type() == Some(EnergyType::Water)
         {
