@@ -173,6 +173,11 @@ pub enum SimpleAction {
     ApplyStatusToOpponentActive {
         condition: StatusCondition,
     },
+    /// Team Rocket's Weezing ex's Boiler Smog: apply ALL of these Special Conditions at once to
+    /// the opponent's Active Pokémon (e.g. Poisoned and Burned together).
+    ApplyStatusesToOpponentActive {
+        conditions: Vec<StatusCondition>,
+    },
     Noop, // No operation, used to have the user say "no" to a question
 }
 
@@ -348,6 +353,9 @@ impl fmt::Display for SimpleAction {
             SimpleAction::UseStadium => write!(f, "UseStadium"),
             SimpleAction::ApplyStatusToOpponentActive { condition } => {
                 write!(f, "ApplyStatusToOpponentActive({condition:?})")
+            }
+            SimpleAction::ApplyStatusesToOpponentActive { conditions } => {
+                write!(f, "ApplyStatusesToOpponentActive({conditions:?})")
             }
             SimpleAction::Noop => write!(f, "Noop"),
         }

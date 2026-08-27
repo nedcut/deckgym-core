@@ -242,6 +242,10 @@ pub enum AbilityMechanic {
     /// now Paralyzed." Offered as an optional `UseAbility` when the evolution resolves.
     CoinFlipParalyzeOpponentActiveOnEvolve,
     DiscardRandomEnergyFromOpponentActiveOnEvolve,
+    /// Team Rocket's Weezing ex's Boiler Smog: "Once during your turn, when you play this
+    /// Pokémon from your hand to evolve 1 of your Pokémon, you may make your opponent's Active
+    /// Pokémon Poisoned and Burned."
+    PoisonAndBurnOpponentActiveOnEvolve,
     CanEvolveIntoEeveeEvolution,
     CanEvolveOnFirstTurnIfActive,
     CounterattackDamage {

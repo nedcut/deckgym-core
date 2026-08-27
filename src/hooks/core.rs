@@ -10,7 +10,9 @@ use crate::{
     },
     card_ids::CardId,
     effects::{CardEffect, TurnEffect},
-    models::{Card, EnergyType, PlayedCard, TrainerCard, TrainerType, BASIC_STAGE},
+    models::{
+        Card, EnergyType, PlayedCard, StatusCondition, TrainerCard, TrainerType, BASIC_STAGE,
+    },
     stadiums::{
         get_arena_of_antiquity_damage_bonus, get_training_area_damage_bonus,
         is_bounded_field_active, is_hiking_trail_active, is_soothing_shore_active,
@@ -201,6 +203,17 @@ pub(crate) fn on_evolve(
                     ],
                 ));
             }
+        }
+        Some(AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve) => {
+            state.move_generation_stack.push((
+                actor,
+                vec![
+                    SimpleAction::ApplyStatusesToOpponentActive {
+                        conditions: vec![StatusCondition::Poisoned, StatusCondition::Burned],
+                    },
+                    SimpleAction::Noop,
+                ],
+            ));
         }
         _ => {}
     }

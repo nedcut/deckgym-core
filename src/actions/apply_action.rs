@@ -189,7 +189,8 @@ pub fn forecast_action(state: &State, action: &Action) -> Outcomes {
         | SimpleAction::DiscardActiveStadium
         | SimpleAction::DiscardRandomOpponentActiveEnergy
         | SimpleAction::MoveRandomOpponentEnergyToActive { .. }
-        | SimpleAction::ApplyStatusToOpponentActive { .. } => forecast_deterministic_action(),
+        | SimpleAction::ApplyStatusToOpponentActive { .. }
+        | SimpleAction::ApplyStatusesToOpponentActive { .. } => forecast_deterministic_action(),
         // Noop is the "decline" branch of Victini's Victory Star prompt when a coin result is
         // parked; otherwise it is an ordinary no-op ("say no" to an optional effect).
         SimpleAction::Noop => {
@@ -490,6 +491,12 @@ fn apply_deterministic_action(state: &mut State, action: &Action) {
         SimpleAction::ApplyStatusToOpponentActive { condition } => {
             let opponent = (action.actor + 1) % 2;
             state.apply_status_condition(opponent, 0, *condition);
+        }
+        SimpleAction::ApplyStatusesToOpponentActive { conditions } => {
+            let opponent = (action.actor + 1) % 2;
+            for condition in conditions {
+                state.apply_status_condition(opponent, 0, *condition);
+            }
         }
         SimpleAction::Noop => {}
         _ => panic!("Deterministic Action expected"),
