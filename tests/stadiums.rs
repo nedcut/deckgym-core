@@ -1,3 +1,5 @@
+#[path = "stadiums/arcade_test.rs"]
+mod arcade_test;
 #[path = "stadiums/area_zero_test.rs"]
 mod area_zero_test;
 #[path = "stadiums/arena_of_antiquity_test.rs"]
