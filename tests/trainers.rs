@@ -40,6 +40,8 @@ mod skyla_test;
 mod team_rockets_goozooka_test;
 #[path = "trainers/team_rockets_master_plan_test.rs"]
 mod team_rockets_master_plan_test;
+#[path = "trainers/team_rockets_researcher_test.rs"]
+mod team_rockets_researcher_test;
 #[path = "trainers/team_rockets_thieving_machine_test.rs"]
 mod team_rockets_thieving_machine_test;
 #[path = "trainers/volkner_test.rs"]

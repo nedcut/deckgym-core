@@ -232,6 +232,9 @@ pub fn forecast_trainer_action(
         CardId::B4a068TeamRocketsGoozooka | CardId::B4a110TeamRocketsGoozooka => {
             Outcomes::single_fn(team_rockets_goozooka_effect)
         }
+        CardId::B4a069TeamRocketsResearcher | CardId::B4a085TeamRocketsResearcher => {
+            team_rockets_researcher_outcomes()
+        }
         _ => panic!("Unsupported Trainer Card"),
     }
 }
@@ -1569,6 +1572,33 @@ fn team_rockets_goozooka_effect(_: &mut StdRng, state: &mut State, action: &Acti
     state
         .get_active_mut(opponent)
         .add_effect(CardEffect::IncreasedRetreatCost { amount: 1 }, 1);
+}
+
+/// Team Rocket's Researcher: flip a coin until you get tails. For each heads, put a random
+/// Pokémon that has "Team Rocket" in its name from your deck into your hand.
+fn team_rockets_researcher_outcomes() -> Outcomes {
+    // Flip coins until tails - capped at 5 heads for practicality (mirrors Vaporeon's Hyper
+    // Whirlpool). Which specific matching card is pulled for each heads is picked deterministically
+    // (instead of branching over every combination) to avoid exploding the game tree; the deck is
+    // reshuffled afterwards so this doesn't leak deck order.
+    Outcomes::geometric_until_tails(5, move |heads| {
+        Box::new(move |rng, state, action| {
+            let player = action.actor;
+            let mut eligible: Vec<Card> = state.decks[player]
+                .cards
+                .iter()
+                .filter(|card| card.get_name().contains("Team Rocket"))
+                .cloned()
+                .collect();
+            for _ in 0..heads {
+                let Some(card) = eligible.pop() else {
+                    break;
+                };
+                state.transfer_card_from_deck_to_hand(player, &card);
+            }
+            state.decks[player].shuffle(false, rng);
+        })
+    })
 }
 
 fn nemona_effect(_: &mut StdRng, state: &mut State, _: &Action) {
