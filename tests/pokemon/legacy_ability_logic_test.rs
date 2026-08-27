@@ -672,6 +672,25 @@ fn test_reuniclus_infinite_increase_raises_effective_hp_on_attach() {
 }
 
 #[test]
+fn test_serperior_regal_bloom_raises_effective_hp_on_attach() {
+    let mut game = get_test_game_with_board(
+        vec![PlayedCard::from_id(CardId::B4a005Serperior)],
+        vec![PlayedCard::from_id(CardId::A1001Bulbasaur)],
+    );
+
+    game.apply_action(&Action {
+        actor: 0,
+        action: SimpleAction::Attach {
+            attachments: vec![(1, EnergyType::Grass, 0)],
+            is_turn_energy: true,
+        },
+        is_stack: false,
+    });
+
+    assert_eq!(game.get_state_clone().get_active(0).get_remaining_hp(), 130);
+}
+
+#[test]
 fn test_goomy_sticky_membrane_blocks_exact_cost_attack() {
     let game = get_test_game_with_board(
         vec![PlayedCard::from_id(CardId::A2091Riolu).with_energy(vec![EnergyType::Fighting])],

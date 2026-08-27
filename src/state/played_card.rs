@@ -234,20 +234,18 @@ impl PlayedCard {
 
         effective_hp += self.stadium_hp_bonus;
 
-        // Reuniclus Infinite Increase: +30 HP for each Psychic Energy attached
-        if has_ability_mechanic(
-            &self.card,
-            &AbilityMechanic::IncreaseHpPerAttachedEnergy {
-                energy_type: EnergyType::Psychic,
-                amount: 30,
-            },
-        ) {
-            let psychic_count = self
+        // E.g. Reuniclus Infinite Increase, Serperior Regal Bloom: +HP for each Energy of a type attached
+        if let Some(AbilityMechanic::IncreaseHpPerAttachedEnergy {
+            energy_type,
+            amount,
+        }) = get_ability_mechanic(&self.card)
+        {
+            let matching_count = self
                 .attached_energy
                 .iter()
-                .filter(|e| **e == EnergyType::Psychic)
+                .filter(|e| *e == energy_type)
                 .count() as u32;
-            effective_hp += psychic_count * 30;
+            effective_hp += matching_count * amount;
         }
 
         effective_hp
