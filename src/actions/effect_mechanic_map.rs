@@ -1814,6 +1814,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         },
     );
     map.insert(
+        "This attack also does 50 damage to 1 of your opponent's Benched Pokémon that has damage on it.",
+        Mechanic::AlsoChoiceBenchDamageIfDamaged {
+            opponent: true,
+            damage: 50,
+        },
+    );
+    map.insert(
         "This attack does 50 damage to 1 of your opponent's Pokémon.",
         Mechanic::DirectDamage {
             damage: 50,

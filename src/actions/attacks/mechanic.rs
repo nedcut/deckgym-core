@@ -422,6 +422,13 @@ pub enum Mechanic {
         opponent: bool,
         damage: u32,
     },
+    /// Team Rocket's Zapdos ex's Thunderclaw: deal the attack's fixed damage to the Defending
+    /// Pokémon, then also let the attacker choose 1 of `opponent`'s Benched Pokémon that already
+    /// has damage on it to deal `damage` to.
+    AlsoChoiceBenchDamageIfDamaged {
+        opponent: bool,
+        damage: u32,
+    },
     ExtraDamageIfHurt {
         extra_damage: u32,
         opponent: bool,

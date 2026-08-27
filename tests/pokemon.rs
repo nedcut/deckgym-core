@@ -290,6 +290,8 @@ mod sylveon_soothing_ribbon_test;
 mod tandemaus_b2_test;
 #[path = "pokemon/tapu_lele_energy_arrow_test.rs"]
 mod tapu_lele_energy_arrow_test;
+#[path = "pokemon/team_rockets_zapdos_ex_thunderclaw_test.rs"]
+mod team_rockets_zapdos_ex_thunderclaw_test;
 #[path = "pokemon/tentacruel_test.rs"]
 mod tentacruel_test;
 #[path = "pokemon/tepig_stoke_test.rs"]

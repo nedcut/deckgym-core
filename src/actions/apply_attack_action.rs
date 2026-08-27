@@ -557,6 +557,9 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::AlsoBenchDamageIfDamaged { opponent, damage } => {
             also_bench_damage_if_damaged(state, *opponent, attack.fixed_damage, *damage)
         }
+        Mechanic::AlsoChoiceBenchDamageIfDamaged { opponent, damage } => {
+            also_choice_bench_damage_if_damaged(state, *opponent, attack.fixed_damage, *damage)
+        }
         Mechanic::ExtraDamageIfHurt {
             extra_damage,
             opponent,
@@ -1854,6 +1857,44 @@ fn also_choice_bench_damage(
     };
     let choices: Vec<_> = state
         .enumerate_bench_pokemon(bench_target)
+        .map(|(in_play_idx, _)| {
+            let targets = vec![
+                (active_damage, opponent_player, 0),
+                (bench_damage, bench_target, in_play_idx),
+            ];
+            SimpleAction::ApplyDamage {
+                attacking_ref: (state.current_player, 0),
+                targets,
+                is_from_active_attack: true,
+            }
+        })
+        .collect();
+    AttackOutcomes::single_effect(move |_, state, action| {
+        if !choices.is_empty() {
+            state
+                .move_generation_stack
+                .push((action.actor, choices.clone()));
+        }
+    })
+}
+
+/// Team Rocket's Zapdos ex's Thunderclaw: like `also_choice_bench_damage`, but the bench choice
+/// is restricted to `opponent`'s Benched Pokémon that already have damage on them.
+fn also_choice_bench_damage_if_damaged(
+    state: &State,
+    opponent: bool,
+    active_damage: u32,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let opponent_player = (state.current_player + 1) % 2;
+    let bench_target = if opponent {
+        opponent_player
+    } else {
+        state.current_player
+    };
+    let choices: Vec<_> = state
+        .enumerate_bench_pokemon(bench_target)
+        .filter(|(_, pokemon)| pokemon.is_damaged())
         .map(|(in_play_idx, _)| {
             let targets = vec![
                 (active_damage, opponent_player, 0),
