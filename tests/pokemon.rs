@@ -308,6 +308,8 @@ mod tentacruel_test;
 mod tepig_stoke_test;
 #[path = "pokemon/terapagos_ex_test.rs"]
 mod terapagos_ex_test;
+#[path = "pokemon/tinkaton_gigaton_hammer_test.rs"]
+mod tinkaton_gigaton_hammer_test;
 #[path = "pokemon/toxtricity_ex_damaging_spark_test.rs"]
 mod toxtricity_ex_damaging_spark_test;
 #[path = "pokemon/typhlosion_fire_breath_test.rs"]

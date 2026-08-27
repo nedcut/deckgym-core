@@ -2215,7 +2215,15 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             damage: 130,
         },
     );
-    // map.insert("During your next turn, this Pokémon can't use Gigaton Hammer.", todo_implementation);
+    map.insert(
+        "During your next turn, this Pokémon can't use Gigaton Hammer.",
+        Mechanic::DamageAndCardEffect {
+            opponent: false,
+            effect: CardEffect::CannotUseAttack("Gigaton Hammer".to_string()),
+            duration: 2,
+            coin_flip: false,
+        },
+    );
     map.insert(
         "During your opponent's next turn, attacks used by the Defending Pokémon cost 2 [C] more.",
         Mechanic::DamageAndCardEffect {
