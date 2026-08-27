@@ -612,6 +612,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
     map.insert("Flip 3 coins. For each heads, a card is chosen at random from your opponent's hand. Your opponent reveals that card and shuffles it into their deck.", Mechanic::CoinFlipsShuffleOpponentHandCards { num_coins: 3 });
     map.insert("Flip 3 coins. Take an amount of [R] Energy from your Energy Zone equal to the number of heads and attach it to your Benched [R] Pokémon in any way you like.", Mechanic::MoltresExInfernoDance);
     map.insert(
+        "Flip 3 coins. For each heads, produce a [R] Energy from your Energy Zone and attach it to this Pokémon.",
+        Mechanic::CoinFlipsAttachEnergyToSelf {
+            num_coins: 3,
+            energy_type: EnergyType::Fire,
+        },
+    );
+    map.insert(
         "Flip 3 coins. This attack does 10 damage for each heads.",
         Mechanic::ExtraDamageForEachHeads {
             include_fixed_damage: false,

@@ -270,6 +270,10 @@ fn forecast_effect_attack_by_mechanic(
             mega_kangaskhan_ex_double_punching_family(attack)
         }
         Mechanic::MoltresExInfernoDance => moltres_inferno_dance(),
+        Mechanic::CoinFlipsAttachEnergyToSelf {
+            num_coins,
+            energy_type,
+        } => coin_flips_attach_energy_to_self(*num_coins, *energy_type),
         Mechanic::MagikarpWaterfallEvolution => waterfall_evolution(state),
         Mechanic::MoveAllEnergyTypeToBench { energy_type } => {
             move_all_energy_type_to_bench(state, attack, *energy_type)
@@ -1364,6 +1368,18 @@ fn moltres_inferno_dance() -> AttackOutcomes {
                 state
                     .move_generation_stack
                     .push((action.actor, all_choices));
+            }
+        })
+    })
+}
+
+/// Team Rocket's Moltres ex's Heat Charged: flip `num_coins` coins and attach `energy_type`
+/// Energy from the Energy Zone to the attacking Pokémon itself, once per heads.
+fn coin_flips_attach_energy_to_self(num_coins: usize, energy_type: EnergyType) -> AttackOutcomes {
+    AttackOutcomes::binomial_by_heads(num_coins, move |heads| {
+        active_damage_effect_outcome(0, move |_, state, action| {
+            if heads > 0 {
+                state.attach_energy_from_zone(action.actor, 0, energy_type, heads as u32, false);
             }
         })
     })

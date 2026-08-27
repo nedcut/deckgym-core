@@ -247,6 +247,13 @@ pub enum Mechanic {
         energy_type: EnergyType,
         count: usize,
     },
+    /// Team Rocket's Moltres ex's Heat Charged: flip `num_coins` coins; for each heads, produce
+    /// an Energy of `energy_type` from the Energy Zone and attach it to the attacking Pokémon
+    /// itself.
+    CoinFlipsAttachEnergyToSelf {
+        num_coins: usize,
+        energy_type: EnergyType,
+    },
     // Fairly unique mechanics
     /// Manaphy's Oceanic Gift / Carbink's Glittering Gift: choose 2 of your Benched Pokémon and
     /// attach an Energy of the given type to each.
