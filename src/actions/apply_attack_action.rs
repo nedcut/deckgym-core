@@ -270,6 +270,10 @@ fn forecast_effect_attack_by_mechanic(
             mega_kangaskhan_ex_double_punching_family(attack)
         }
         Mechanic::MoltresExInfernoDance => moltres_inferno_dance(),
+        Mechanic::CoinFlipsAttachEnergyToSelf {
+            num_coins,
+            energy_type,
+        } => coin_flips_attach_energy_to_self(*num_coins, *energy_type),
         Mechanic::MagikarpWaterfallEvolution => waterfall_evolution(state),
         Mechanic::MoveAllEnergyTypeToBench { energy_type } => {
             move_all_energy_type_to_bench(state, attack, *energy_type)
@@ -554,12 +558,21 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::AlsoChoiceBenchDamage { opponent, damage } => {
             also_choice_bench_damage(state, *opponent, attack.fixed_damage, *damage)
         }
+        Mechanic::AlsoBenchDamageIfDamaged { opponent, damage } => {
+            also_bench_damage_if_damaged(state, *opponent, attack.fixed_damage, *damage)
+        }
+        Mechanic::AlsoChoiceBenchDamageIfDamaged { opponent, damage } => {
+            also_choice_bench_damage_if_damaged(state, *opponent, attack.fixed_damage, *damage)
+        }
         Mechanic::ExtraDamageIfHurt {
             extra_damage,
             opponent,
         } => extra_damage_if_hurt(state, attack.fixed_damage, *extra_damage, *opponent),
         Mechanic::ExtraDamageIfUndamaged { extra_damage } => {
             extra_damage_if_undamaged(state, attack.fixed_damage, *extra_damage)
+        }
+        Mechanic::ReducedDamageIfSelfDamaged { reduction } => {
+            reduced_damage_if_self_damaged(state, attack.fixed_damage, *reduction)
         }
         Mechanic::OptionalDiscardBenchedBasicForExtraDamage {
             energy_type,
@@ -725,6 +738,9 @@ fn forecast_effect_attack_by_mechanic(
             attack_name,
             damage_per_use,
         } => damage_per_attack_used_this_game(state, attack_name, *damage_per_use),
+        Mechanic::DamagePerOwnHandCard { damage_per_card } => {
+            damage_per_own_hand_card(state, *damage_per_card)
+        }
         Mechanic::ExtraDamageIfMovedFromBench { extra_damage } => {
             extra_damage_if_moved_from_bench_attack(state, attack.fixed_damage, *extra_damage)
         }
@@ -1363,6 +1379,18 @@ fn moltres_inferno_dance() -> AttackOutcomes {
     })
 }
 
+/// Team Rocket's Moltres ex's Heat Charged: flip `num_coins` coins and attach `energy_type`
+/// Energy from the Energy Zone to the attacking Pokémon itself, once per heads.
+fn coin_flips_attach_energy_to_self(num_coins: usize, energy_type: EnergyType) -> AttackOutcomes {
+    AttackOutcomes::binomial_by_heads(num_coins, move |heads| {
+        active_damage_effect_outcome(0, move |_, state, action| {
+            if heads > 0 {
+                state.attach_energy_from_zone(action.actor, 0, energy_type, heads as u32, false);
+            }
+        })
+    })
+}
+
 fn charge_energy_any_way_to_type(
     damage: u32,
     energy_type: EnergyType,
@@ -1870,6 +1898,67 @@ fn also_choice_bench_damage(
                 .push((action.actor, choices.clone()));
         }
     })
+}
+
+/// Team Rocket's Zapdos ex's Thunderclaw: like `also_choice_bench_damage`, but the bench choice
+/// is restricted to `opponent`'s Benched Pokémon that already have damage on them.
+fn also_choice_bench_damage_if_damaged(
+    state: &State,
+    opponent: bool,
+    active_damage: u32,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let opponent_player = (state.current_player + 1) % 2;
+    let bench_target = if opponent {
+        opponent_player
+    } else {
+        state.current_player
+    };
+    let choices: Vec<_> = state
+        .enumerate_bench_pokemon(bench_target)
+        .filter(|(_, pokemon)| pokemon.is_damaged())
+        .map(|(in_play_idx, _)| {
+            let targets = vec![
+                (active_damage, opponent_player, 0),
+                (bench_damage, bench_target, in_play_idx),
+            ];
+            SimpleAction::ApplyDamage {
+                attacking_ref: (state.current_player, 0),
+                targets,
+                is_from_active_attack: true,
+            }
+        })
+        .collect();
+    AttackOutcomes::single_effect(move |_, state, action| {
+        if !choices.is_empty() {
+            state
+                .move_generation_stack
+                .push((action.actor, choices.clone()));
+        }
+    })
+}
+
+/// Toxtricity ex's Damaging Spark: like `also_bench_damage`, but applies to EVERY one of
+/// `opponent`'s Benched Pokémon that already has damage on it, rather than every benched Pokémon
+/// (optionally filtered by whether it has Energy attached).
+fn also_bench_damage_if_damaged(
+    state: &State,
+    opponent: bool,
+    active_damage: u32,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let player = if opponent {
+        (state.current_player + 1) % 2
+    } else {
+        state.current_player
+    };
+    let mut targets: Vec<(u32, bool, usize)> = state
+        .enumerate_bench_pokemon(player)
+        .filter(|(_, pokemon)| pokemon.is_damaged())
+        .map(|(idx, _)| (bench_damage, opponent, idx))
+        .collect();
+    targets.push((active_damage, true, 0)); // Opponent's Active Pokémon is always index 0
+    damage_effect_doutcome(targets, |_, _, _| {})
 }
 
 fn self_charge_active_from_energies(damage: u32, energies: Vec<EnergyType>) -> AttackOutcomes {
@@ -2930,6 +3019,18 @@ fn extra_damage_if_undamaged(state: &State, base: u32, extra: u32) -> AttackOutc
     }
 }
 
+/// Regidrago's Draconic Slam: `base` is the full (undamaged-self) damage; subtract `reduction`
+/// (floored at 0) when the attacking Pokémon already has damage on it.
+fn reduced_damage_if_self_damaged(state: &State, base: u32, reduction: u32) -> AttackOutcomes {
+    let attacker = state.get_active(state.current_player);
+    let damage = if attacker.is_damaged() {
+        base.saturating_sub(reduction)
+    } else {
+        base
+    };
+    active_damage_doutcome(damage)
+}
+
 /// Vespiquen ex - Chase Order: the attacker may discard 1 of its Benched Basic Pokémon of the
 /// given type to boost the damage. The choice is queued as a single action per option so that the
 /// boosted damage is applied in one go (damage modifiers must not run twice).
@@ -3296,6 +3397,13 @@ fn damage_per_attack_used_this_game(
 ) -> AttackOutcomes {
     let uses = state.count_attack_used_this_game(state.current_player, attack_name);
     active_damage_doutcome(damage_per_use * uses)
+}
+
+/// Team Rocket's Slowking ex's Hand Kinesis: `damage_per_card` damage for each card in the
+/// attacker's own hand (the card used to attack is already out of hand by this point).
+fn damage_per_own_hand_card(state: &State, damage_per_card: u32) -> AttackOutcomes {
+    let hand_size = state.hands[state.current_player].len() as u32;
+    active_damage_doutcome(damage_per_card * hand_size)
 }
 
 fn extra_damage_if_moved_from_bench_attack(

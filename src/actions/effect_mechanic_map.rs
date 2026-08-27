@@ -612,6 +612,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
     map.insert("Flip 3 coins. For each heads, a card is chosen at random from your opponent's hand. Your opponent reveals that card and shuffles it into their deck.", Mechanic::CoinFlipsShuffleOpponentHandCards { num_coins: 3 });
     map.insert("Flip 3 coins. Take an amount of [R] Energy from your Energy Zone equal to the number of heads and attach it to your Benched [R] Pokémon in any way you like.", Mechanic::MoltresExInfernoDance);
     map.insert(
+        "Flip 3 coins. For each heads, produce a [R] Energy from your Energy Zone and attach it to this Pokémon.",
+        Mechanic::CoinFlipsAttachEnergyToSelf {
+            num_coins: 3,
+            energy_type: EnergyType::Fire,
+        },
+    );
+    map.insert(
         "Flip 3 coins. This attack does 10 damage for each heads.",
         Mechanic::ExtraDamageForEachHeads {
             include_fixed_damage: false,
@@ -1107,6 +1114,10 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
     map.insert(
         "If this Pokémon has no damage on it, this attack does 40 more damage.",
         Mechanic::ExtraDamageIfUndamaged { extra_damage: 40 },
+    );
+    map.insert(
+        "If this Pokémon has damage on it, this attack does -100 damage.",
+        Mechanic::ReducedDamageIfSelfDamaged { reduction: 100 },
     );
     map.insert(
         "If this Pokémon moved from your Bench to the Active Spot this turn, this attack does 50 more damage.",
@@ -1794,6 +1805,12 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         },
     );
     map.insert(
+        "This attack does 20 damage for each card in your hand.",
+        Mechanic::DamagePerOwnHandCard {
+            damage_per_card: 20,
+        },
+    );
+    map.insert(
         "This attack does 40 damage to 1 of your opponent's Pokémon.",
         Mechanic::DirectDamage {
             damage: 40,
@@ -1811,6 +1828,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         Mechanic::DirectDamage {
             damage: 50,
             bench_only: true,
+        },
+    );
+    map.insert(
+        "This attack also does 50 damage to 1 of your opponent's Benched Pokémon that has damage on it.",
+        Mechanic::AlsoChoiceBenchDamageIfDamaged {
+            opponent: true,
+            damage: 50,
         },
     );
     map.insert(
@@ -2120,7 +2144,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             count: 3,
         },
     );
-    // map.insert("This attack also does 30 damage to each of your opponent's Benched Pokémon that has damage on it.", todo_implementation);
+    map.insert(
+        "This attack also does 30 damage to each of your opponent's Benched Pokémon that has damage on it.",
+        Mechanic::AlsoBenchDamageIfDamaged {
+            opponent: true,
+            damage: 30,
+        },
+    );
     // Gigalith ex - Megaton Cannon
     map.insert(
         "This attack does 140 damage to 1 of your opponent's Pokémon. During your next turn, this Pokémon can't attack.",

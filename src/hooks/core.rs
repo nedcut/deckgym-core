@@ -10,7 +10,9 @@ use crate::{
     },
     card_ids::CardId,
     effects::{CardEffect, TurnEffect},
-    models::{Card, EnergyType, PlayedCard, TrainerCard, TrainerType, BASIC_STAGE},
+    models::{
+        Card, EnergyType, PlayedCard, StatusCondition, TrainerCard, TrainerType, BASIC_STAGE,
+    },
     stadiums::{
         get_arena_of_antiquity_damage_bonus, get_training_area_damage_bonus,
         is_bounded_field_active, is_hiking_trail_active, is_soothing_shore_active,
@@ -197,6 +199,34 @@ pub(crate) fn on_evolve(
                     actor,
                     vec![
                         SimpleAction::DiscardRandomOpponentActiveEnergy,
+                        SimpleAction::Noop,
+                    ],
+                ));
+            }
+        }
+        Some(AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve) => {
+            state.move_generation_stack.push((
+                actor,
+                vec![
+                    SimpleAction::ApplyStatusesToOpponentActive {
+                        conditions: vec![StatusCondition::Poisoned, StatusCondition::Burned],
+                    },
+                    SimpleAction::Noop,
+                ],
+            ));
+        }
+        Some(AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve) => {
+            let opponent = (actor + 1) % 2;
+            let has_energy = state
+                .maybe_get_active(opponent)
+                .is_some_and(|active| !active.attached_energy.is_empty());
+            if has_energy {
+                state.move_generation_stack.push((
+                    actor,
+                    vec![
+                        SimpleAction::MoveOpponentActiveEnergyToSelf {
+                            to_in_play_idx: in_play_idx,
+                        },
                         SimpleAction::Noop,
                     ],
                 ));

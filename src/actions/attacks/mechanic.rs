@@ -247,6 +247,13 @@ pub enum Mechanic {
         energy_type: EnergyType,
         count: usize,
     },
+    /// Team Rocket's Moltres ex's Heat Charged: flip `num_coins` coins; for each heads, produce
+    /// an Energy of `energy_type` from the Energy Zone and attach it to the attacking Pokémon
+    /// itself.
+    CoinFlipsAttachEnergyToSelf {
+        num_coins: usize,
+        energy_type: EnergyType,
+    },
     // Fairly unique mechanics
     /// Manaphy's Oceanic Gift / Carbink's Glittering Gift: choose 2 of your Benched Pokémon and
     /// attach an Energy of the given type to each.
@@ -415,12 +422,32 @@ pub enum Mechanic {
         opponent: bool,
         damage: u32,
     },
+    /// Toxtricity ex's Damaging Spark: deal the attack's fixed damage to the Defending Pokémon,
+    /// then also deal `damage` to EVERY one of `opponent`'s Benched Pokémon that already has
+    /// damage on it.
+    AlsoBenchDamageIfDamaged {
+        opponent: bool,
+        damage: u32,
+    },
+    /// Team Rocket's Zapdos ex's Thunderclaw: deal the attack's fixed damage to the Defending
+    /// Pokémon, then also let the attacker choose 1 of `opponent`'s Benched Pokémon that already
+    /// has damage on it to deal `damage` to.
+    AlsoChoiceBenchDamageIfDamaged {
+        opponent: bool,
+        damage: u32,
+    },
     ExtraDamageIfHurt {
         extra_damage: u32,
         opponent: bool,
     },
     ExtraDamageIfUndamaged {
         extra_damage: u32,
+    },
+    /// Regidrago's Draconic Slam: "If this Pokémon has damage on it, this attack does -100
+    /// damage." The attack's `fixed_damage` is the undamaged-self base; `reduction` is subtracted
+    /// (floored at 0) when the attacking Pokémon already has damage on it.
+    ReducedDamageIfSelfDamaged {
+        reduction: u32,
     },
     /// Vespiquen ex's Chase Order: "You may discard 1 of your Benched Basic [G] Pokémon. If you
     /// do, this attack does 70 more damage." The attacker chooses between the plain damage and
@@ -458,6 +485,11 @@ pub enum Mechanic {
     DamagePerAttackUsedThisGame {
         attack_name: String,
         damage_per_use: u32,
+    },
+    /// Team Rocket's Slowking ex's Hand Kinesis: deal `damage_per_card` damage for each card in
+    /// the attacker's own hand.
+    DamagePerOwnHandCard {
+        damage_per_card: u32,
     },
     ExtraDamageIfMovedFromBench {
         extra_damage: u32,

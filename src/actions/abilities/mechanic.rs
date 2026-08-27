@@ -160,6 +160,12 @@ pub enum AbilityMechanic {
     PoisonOpponentActive,
     ConfuseOpponentActive,
     BurnOpponentActive,
+    /// Team Rocket's Slowking ex's Evil Inspiration: "Once during your turn, if this Pokémon is
+    /// in the Active Spot, you may draw a card." Unlike `EndTurnDrawCardIfActive`, this is an
+    /// actively-used ability (offered any time during the turn, not just at its end).
+    DrawCardIfActive {
+        amount: u32,
+    },
     /// Dustox's Variety Powder: 1 Special Condition is chosen at random from `options` and
     /// inflicted on the opponent's Active Pokémon. Conditions already affecting that Pokémon are
     /// excluded from the draw, so the ability is unusable once all `options` are applied.
@@ -236,6 +242,16 @@ pub enum AbilityMechanic {
     /// now Paralyzed." Offered as an optional `UseAbility` when the evolution resolves.
     CoinFlipParalyzeOpponentActiveOnEvolve,
     DiscardRandomEnergyFromOpponentActiveOnEvolve,
+    /// Team Rocket's Weezing ex's Boiler Smog: "Once during your turn, when you play this
+    /// Pokémon from your hand to evolve 1 of your Pokémon, you may make your opponent's Active
+    /// Pokémon Poisoned and Burned."
+    PoisonAndBurnOpponentActiveOnEvolve,
+    /// Team Rocket's Raticate ex's Thieving Incisors: "Once during your turn, when you play this
+    /// Pokémon from your hand to evolve 1 of your Pokémon, you may move a random Energy from your
+    /// opponent's Active Pokémon to this Pokémon." Mirrors the "move the last-attached Energy
+    /// instead of a random one" simplification used elsewhere (e.g.
+    /// `DiscardRandomEnergyFromOpponentActiveOnEvolve`).
+    MoveRandomEnergyFromOpponentActiveToSelfOnEvolve,
     CanEvolveIntoEeveeEvolution,
     CanEvolveOnFirstTurnIfActive,
     CounterattackDamage {

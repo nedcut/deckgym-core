@@ -254,6 +254,8 @@ mod purrloin_test;
 mod raichu_evoshock_test;
 #[path = "pokemon/rampardos_head_smash_test.rs"]
 mod rampardos_head_smash_test;
+#[path = "pokemon/regidrago_draconic_slam_test.rs"]
+mod regidrago_draconic_slam_test;
 #[path = "pokemon/rhyperior_test.rs"]
 mod rhyperior_test;
 #[path = "pokemon/roaring_moon_test.rs"]
@@ -290,12 +292,24 @@ mod sylveon_soothing_ribbon_test;
 mod tandemaus_b2_test;
 #[path = "pokemon/tapu_lele_energy_arrow_test.rs"]
 mod tapu_lele_energy_arrow_test;
+#[path = "pokemon/team_rockets_moltres_ex_heat_charged_test.rs"]
+mod team_rockets_moltres_ex_heat_charged_test;
+#[path = "pokemon/team_rockets_raticate_ex_test.rs"]
+mod team_rockets_raticate_ex_test;
+#[path = "pokemon/team_rockets_slowking_ex_test.rs"]
+mod team_rockets_slowking_ex_test;
+#[path = "pokemon/team_rockets_weezing_ex_test.rs"]
+mod team_rockets_weezing_ex_test;
+#[path = "pokemon/team_rockets_zapdos_ex_thunderclaw_test.rs"]
+mod team_rockets_zapdos_ex_thunderclaw_test;
 #[path = "pokemon/tentacruel_test.rs"]
 mod tentacruel_test;
 #[path = "pokemon/tepig_stoke_test.rs"]
 mod tepig_stoke_test;
 #[path = "pokemon/terapagos_ex_test.rs"]
 mod terapagos_ex_test;
+#[path = "pokemon/toxtricity_ex_damaging_spark_test.rs"]
+mod toxtricity_ex_damaging_spark_test;
 #[path = "pokemon/typhlosion_fire_breath_test.rs"]
 mod typhlosion_fire_breath_test;
 #[path = "pokemon/ursaluna_guts_test.rs"]

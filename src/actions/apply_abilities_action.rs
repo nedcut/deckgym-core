@@ -204,6 +204,7 @@ fn forecast_ability_by_mechanic(
         AbilityMechanic::PoisonOpponentActive => poison_opponent_active(),
         AbilityMechanic::ConfuseOpponentActive => confuse_opponent_active(),
         AbilityMechanic::BurnOpponentActive => burn_opponent_active(),
+        AbilityMechanic::DrawCardIfActive { amount } => draw_card_if_active(*amount),
         AbilityMechanic::RandomStatusConditionToOpponentActive { options } => {
             random_status_condition_to_opponent_active(state, action.actor, options)
         }
@@ -267,6 +268,12 @@ fn forecast_ability_by_mechanic(
         }
         AbilityMechanic::DiscardRandomEnergyFromOpponentActiveOnEvolve => {
             panic!("DiscardRandomEnergyFromOpponentActiveOnEvolve is triggered on evolve")
+        }
+        AbilityMechanic::PoisonAndBurnOpponentActiveOnEvolve => {
+            panic!("PoisonAndBurnOpponentActiveOnEvolve is triggered on evolve")
+        }
+        AbilityMechanic::MoveRandomEnergyFromOpponentActiveToSelfOnEvolve => {
+            panic!("MoveRandomEnergyFromOpponentActiveToSelfOnEvolve is triggered on evolve")
         }
         AbilityMechanic::CanEvolveIntoEeveeEvolution => {
             panic!("CanEvolveIntoEeveeEvolution is a passive ability")
@@ -560,6 +567,15 @@ fn poison_opponent_active() -> Outcomes {
     Outcomes::single_fn(|_rng, state, action| {
         let opponent = (action.actor + 1) % 2;
         state.apply_status_condition(opponent, 0, StatusCondition::Poisoned);
+    })
+}
+
+/// Team Rocket's Slowking ex's Evil Inspiration: draw `amount` cards.
+fn draw_card_if_active(amount: u32) -> Outcomes {
+    Outcomes::single_fn(move |_rng, state, action| {
+        for _ in 0..amount {
+            state.maybe_draw_card(action.actor);
+        }
     })
 }
 
