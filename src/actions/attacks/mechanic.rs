@@ -415,6 +415,13 @@ pub enum Mechanic {
         opponent: bool,
         damage: u32,
     },
+    /// Toxtricity ex's Damaging Spark: deal the attack's fixed damage to the Defending Pokémon,
+    /// then also deal `damage` to EVERY one of `opponent`'s Benched Pokémon that already has
+    /// damage on it.
+    AlsoBenchDamageIfDamaged {
+        opponent: bool,
+        damage: u32,
+    },
     ExtraDamageIfHurt {
         extra_damage: u32,
         opponent: bool,

@@ -554,6 +554,9 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::AlsoChoiceBenchDamage { opponent, damage } => {
             also_choice_bench_damage(state, *opponent, attack.fixed_damage, *damage)
         }
+        Mechanic::AlsoBenchDamageIfDamaged { opponent, damage } => {
+            also_bench_damage_if_damaged(state, *opponent, attack.fixed_damage, *damage)
+        }
         Mechanic::ExtraDamageIfHurt {
             extra_damage,
             opponent,
@@ -1870,6 +1873,29 @@ fn also_choice_bench_damage(
                 .push((action.actor, choices.clone()));
         }
     })
+}
+
+/// Toxtricity ex's Damaging Spark: like `also_bench_damage`, but applies to EVERY one of
+/// `opponent`'s Benched Pokémon that already has damage on it, rather than every benched Pokémon
+/// (optionally filtered by whether it has Energy attached).
+fn also_bench_damage_if_damaged(
+    state: &State,
+    opponent: bool,
+    active_damage: u32,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let player = if opponent {
+        (state.current_player + 1) % 2
+    } else {
+        state.current_player
+    };
+    let mut targets: Vec<(u32, bool, usize)> = state
+        .enumerate_bench_pokemon(player)
+        .filter(|(_, pokemon)| pokemon.is_damaged())
+        .map(|(idx, _)| (bench_damage, opponent, idx))
+        .collect();
+    targets.push((active_damage, true, 0)); // Opponent's Active Pokémon is always index 0
+    damage_effect_doutcome(targets, |_, _, _| {})
 }
 
 fn self_charge_active_from_energies(damage: u32, energies: Vec<EnergyType>) -> AttackOutcomes {
