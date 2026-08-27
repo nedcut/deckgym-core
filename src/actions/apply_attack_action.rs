@@ -571,6 +571,9 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::ExtraDamageIfUndamaged { extra_damage } => {
             extra_damage_if_undamaged(state, attack.fixed_damage, *extra_damage)
         }
+        Mechanic::ReducedDamageIfSelfDamaged { reduction } => {
+            reduced_damage_if_self_damaged(state, attack.fixed_damage, *reduction)
+        }
         Mechanic::OptionalDiscardBenchedBasicForExtraDamage {
             energy_type,
             extra_damage,
@@ -3014,6 +3017,18 @@ fn extra_damage_if_undamaged(state: &State, base: u32, extra: u32) -> AttackOutc
     } else {
         active_damage_doutcome(base + extra)
     }
+}
+
+/// Regidrago's Draconic Slam: `base` is the full (undamaged-self) damage; subtract `reduction`
+/// (floored at 0) when the attacking Pokémon already has damage on it.
+fn reduced_damage_if_self_damaged(state: &State, base: u32, reduction: u32) -> AttackOutcomes {
+    let attacker = state.get_active(state.current_player);
+    let damage = if attacker.is_damaged() {
+        base.saturating_sub(reduction)
+    } else {
+        base
+    };
+    active_damage_doutcome(damage)
 }
 
 /// Vespiquen ex - Chase Order: the attacker may discard 1 of its Benched Basic Pokémon of the

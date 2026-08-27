@@ -443,6 +443,12 @@ pub enum Mechanic {
     ExtraDamageIfUndamaged {
         extra_damage: u32,
     },
+    /// Regidrago's Draconic Slam: "If this Pokémon has damage on it, this attack does -100
+    /// damage." The attack's `fixed_damage` is the undamaged-self base; `reduction` is subtracted
+    /// (floored at 0) when the attacking Pokémon already has damage on it.
+    ReducedDamageIfSelfDamaged {
+        reduction: u32,
+    },
     /// Vespiquen ex's Chase Order: "You may discard 1 of your Benched Basic [G] Pokémon. If you
     /// do, this attack does 70 more damage." The attacker chooses between the plain damage and
     /// discarding one eligible Benched Basic Pokémon for the boosted damage.

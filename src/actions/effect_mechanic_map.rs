@@ -1116,6 +1116,10 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         Mechanic::ExtraDamageIfUndamaged { extra_damage: 40 },
     );
     map.insert(
+        "If this Pokémon has damage on it, this attack does -100 damage.",
+        Mechanic::ReducedDamageIfSelfDamaged { reduction: 100 },
+    );
+    map.insert(
         "If this Pokémon moved from your Bench to the Active Spot this turn, this attack does 50 more damage.",
         Mechanic::ExtraDamageIfMovedFromBench { extra_damage: 50 },
     );
