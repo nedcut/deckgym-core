@@ -235,6 +235,9 @@ pub fn forecast_trainer_action(
         CardId::B4a069TeamRocketsResearcher | CardId::B4a085TeamRocketsResearcher => {
             team_rockets_researcher_outcomes()
         }
+        CardId::B4a071TeamRocketsBoss | CardId::B4a087TeamRocketsBoss => {
+            Outcomes::single_fn(team_rockets_boss_effect)
+        }
         _ => panic!("Unsupported Trainer Card"),
     }
 }
@@ -1572,6 +1575,33 @@ fn team_rockets_goozooka_effect(_: &mut StdRng, state: &mut State, action: &Acti
     state
         .get_active_mut(opponent)
         .add_effect(CardEffect::IncreasedRetreatCost { amount: 1 }, 1);
+}
+
+/// Team Rocket's Boss: look at your opponent's hand and put any number of Basic Pokémon you find
+/// there onto your opponent's Bench.
+fn team_rockets_boss_effect(_: &mut StdRng, state: &mut State, action: &Action) {
+    let player = action.actor;
+    let opponent = (player + 1) % 2;
+    let eligible: Vec<Card> = state.hands[opponent]
+        .iter()
+        .filter(|card| card.is_basic())
+        .cloned()
+        .collect();
+    let free_bench_slots = state.in_play_pokemon[opponent]
+        .iter()
+        .filter(|slot| slot.is_none())
+        .count();
+    let max_to_bench = min(eligible.len(), free_bench_slots);
+
+    if max_to_bench == 0 {
+        return;
+    }
+
+    let choices: Vec<SimpleAction> = (0..=max_to_bench)
+        .flat_map(|k| generate_combinations(&eligible, k))
+        .map(|cards| SimpleAction::BenchOpponentPokemonFromHand { cards })
+        .collect();
+    state.move_generation_stack.push((player, choices));
 }
 
 /// Team Rocket's Researcher: flip a coin until you get tails. For each heads, put a random

@@ -268,6 +268,9 @@ pub fn trainer_move_generation_implementation(
         CardId::B4a069TeamRocketsResearcher | CardId::B4a085TeamRocketsResearcher => {
             can_play_trainer(state, trainer_card)
         }
+        CardId::B4a071TeamRocketsBoss | CardId::B4a087TeamRocketsBoss => {
+            can_play_trainer(state, trainer_card)
+        }
         _ => None,
     }
 }

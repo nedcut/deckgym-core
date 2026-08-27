@@ -114,6 +114,11 @@ pub enum SimpleAction {
     DiscardOwnCards {
         cards: Vec<Card>,
     },
+    /// Team Rocket's Boss: put a chosen subset of Basic Pokémon found in the opponent's hand
+    /// onto the opponent's Bench
+    BenchOpponentPokemonFromHand {
+        cards: Vec<Card>,
+    },
     /// Lusamine: attach energies from discard to a Pokemon
     AttachFromDiscard {
         in_play_idx: usize,
@@ -292,6 +297,9 @@ impl fmt::Display for SimpleAction {
             }
             SimpleAction::DiscardOwnCards { cards } => {
                 write!(f, "DiscardOwnCards({:?})", cards)
+            }
+            SimpleAction::BenchOpponentPokemonFromHand { cards } => {
+                write!(f, "BenchOpponentPokemonFromHand({:?})", cards)
             }
             SimpleAction::AttachFromDiscard {
                 in_play_idx,
