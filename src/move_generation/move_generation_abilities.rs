@@ -141,6 +141,7 @@ fn can_use_ability_by_mechanic(
             !card.ability_used && card.attached_energy.contains(discard_energy)
         }
         AbilityMechanic::PoisonOpponentActive => _in_play_index == 0 && !card.ability_used,
+        AbilityMechanic::DrawCardIfActive { .. } => _in_play_index == 0 && !card.ability_used,
         AbilityMechanic::ConfuseOpponentActive => _in_play_index == 0 && !card.ability_used,
         AbilityMechanic::BurnOpponentActive => !card.ability_used,
         AbilityMechanic::RandomStatusConditionToOpponentActive { options } => {

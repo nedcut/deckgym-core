@@ -1801,6 +1801,12 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         },
     );
     map.insert(
+        "This attack does 20 damage for each card in your hand.",
+        Mechanic::DamagePerOwnHandCard {
+            damage_per_card: 20,
+        },
+    );
+    map.insert(
         "This attack does 40 damage to 1 of your opponent's Pokémon.",
         Mechanic::DirectDamage {
             damage: 40,

@@ -480,6 +480,11 @@ pub enum Mechanic {
         attack_name: String,
         damage_per_use: u32,
     },
+    /// Team Rocket's Slowking ex's Hand Kinesis: deal `damage_per_card` damage for each card in
+    /// the attacker's own hand.
+    DamagePerOwnHandCard {
+        damage_per_card: u32,
+    },
     ExtraDamageIfMovedFromBench {
         extra_damage: u32,
     },

@@ -160,6 +160,12 @@ pub enum AbilityMechanic {
     PoisonOpponentActive,
     ConfuseOpponentActive,
     BurnOpponentActive,
+    /// Team Rocket's Slowking ex's Evil Inspiration: "Once during your turn, if this Pokémon is
+    /// in the Active Spot, you may draw a card." Unlike `EndTurnDrawCardIfActive`, this is an
+    /// actively-used ability (offered any time during the turn, not just at its end).
+    DrawCardIfActive {
+        amount: u32,
+    },
     /// Dustox's Variety Powder: 1 Special Condition is chosen at random from `options` and
     /// inflicted on the opponent's Active Pokémon. Conditions already affecting that Pokémon are
     /// excluded from the draw, so the ability is unusable once all `options` are applied.

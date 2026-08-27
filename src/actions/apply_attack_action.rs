@@ -735,6 +735,9 @@ fn forecast_effect_attack_by_mechanic(
             attack_name,
             damage_per_use,
         } => damage_per_attack_used_this_game(state, attack_name, *damage_per_use),
+        Mechanic::DamagePerOwnHandCard { damage_per_card } => {
+            damage_per_own_hand_card(state, *damage_per_card)
+        }
         Mechanic::ExtraDamageIfMovedFromBench { extra_damage } => {
             extra_damage_if_moved_from_bench_attack(state, attack.fixed_damage, *extra_damage)
         }
@@ -3379,6 +3382,13 @@ fn damage_per_attack_used_this_game(
 ) -> AttackOutcomes {
     let uses = state.count_attack_used_this_game(state.current_player, attack_name);
     active_damage_doutcome(damage_per_use * uses)
+}
+
+/// Team Rocket's Slowking ex's Hand Kinesis: `damage_per_card` damage for each card in the
+/// attacker's own hand (the card used to attack is already out of hand by this point).
+fn damage_per_own_hand_card(state: &State, damage_per_card: u32) -> AttackOutcomes {
+    let hand_size = state.hands[state.current_player].len() as u32;
+    active_damage_doutcome(damage_per_card * hand_size)
 }
 
 fn extra_damage_if_moved_from_bench_attack(

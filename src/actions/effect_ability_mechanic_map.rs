@@ -199,6 +199,10 @@ pub static EFFECT_ABILITY_MECHANIC_MAP: LazyLock<HashMap<&'static str, AbilityMe
         // map.insert("Once during your turn, if this Pokémon is in the Active Spot, you may look at a random Supporter card from your opponent's hand. Use the effect of that card as the effect of this Ability.", todo_implementation);
         map.insert("Once during your turn, if this Pokémon is in the Active Spot, you may make your opponent's Active Pokémon Poisoned.", AbilityMechanic::PoisonOpponentActive);
         map.insert(
+            "Once during your turn, if this Pokémon is in the Active Spot, you may draw a card.",
+            AbilityMechanic::DrawCardIfActive { amount: 1 },
+        );
+        map.insert(
             "Once during your turn, if this Pokémon is in the Active Spot, you may switch in 1 of your opponent's Benched Pokémon that has damage on it to the Active Spot.",
             AbilityMechanic::SwitchDamagedOpponentBenchToActive,
         );
