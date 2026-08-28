@@ -416,6 +416,13 @@ pub static EFFECT_ABILITY_MECHANIC_MAP: LazyLock<HashMap<&'static str, AbilityMe
             },
         );
         map.insert(
+            "This Pokémon gets +30 HP for each [G] Energy attached to it.",
+            AbilityMechanic::IncreaseHpPerAttachedEnergy {
+                energy_type: EnergyType::Grass,
+                amount: 30,
+            },
+        );
+        map.insert(
             "This Pokémon takes -10 damage from attacks.",
             AbilityMechanic::ReduceDamageFromAttacks { amount: 10 },
         );

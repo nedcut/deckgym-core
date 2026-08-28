@@ -189,6 +189,22 @@ impl State {
         }
     }
 
+    /// Keeps every one of `player`'s in-play Pokemon's `double_grass_active` flag in sync with
+    /// whether Serperior's Jungle Totem is active for `player`. Must be called whenever
+    /// `player`'s board composition changes (a Pokemon enters or leaves play), since Jungle
+    /// Totem's effect doesn't require the Serperior itself to be Active.
+    pub(crate) fn refresh_double_grass_bonus_for_player(&mut self, player: usize) {
+        let jungle_totem_active = has_serperior_jungle_totem(self, player);
+        for pokemon in self.in_play_pokemon[player].iter_mut().flatten() {
+            pokemon.refresh_double_grass_active(jungle_totem_active);
+        }
+    }
+
+    pub(crate) fn refresh_double_grass_bonus_all(&mut self) {
+        self.refresh_double_grass_bonus_for_player(0);
+        self.refresh_double_grass_bonus_for_player(1);
+    }
+
     pub fn debug_string(&self) -> String {
         format!(
             "P1 Hand:\t{:?}\n\
@@ -584,6 +600,7 @@ impl State {
         self.discard_piles[ko_receiver].extend(cards_to_discard);
         self.discard_energies[ko_receiver].extend(ko_pokemon.attached_energy.iter().cloned());
         self.in_play_pokemon[ko_receiver][ko_pokemon_idx] = None;
+        self.refresh_double_grass_bonus_for_player(ko_receiver);
     }
 
     /// Removes the attached tool from a Pokémon and puts the tool card into the discard pile.
@@ -677,6 +694,7 @@ impl State {
         for (i, card) in player_1.into_iter().enumerate() {
             self.in_play_pokemon[1][i] = Some(card);
         }
+        self.refresh_double_grass_bonus_all();
     }
 
     /// Set the flag indicating a Pokemon was KO'd by opponent's attack last turn.
