@@ -23,6 +23,12 @@ pub struct PlayedCard {
     damage_counters: u32,
     base_hp: u32,
     stadium_hp_bonus: u32,
+    /// Whether Serperior's Jungle Totem ability is active for this Pokemon's owner
+    /// (i.e. any of their Pokemon in play has it) and this Pokemon is [G] type, so its
+    /// attached [G] Energy is doubled for effects like Serperior's own Regal Bloom.
+    /// Kept in sync via `State::refresh_double_grass_bonus_for_player` whenever the
+    /// board composition for this Pokemon's owner changes.
+    double_grass_active: bool,
     pub attached_energy: Vec<EnergyType>,
     pub attached_tool: Option<Card>,
     pub played_this_turn: bool,
@@ -55,6 +61,7 @@ impl PlayedCard {
             damage_counters,
             base_hp,
             stadium_hp_bonus: 0,
+            double_grass_active: false,
             attached_energy,
             played_this_turn,
             moved_to_active_this_turn: false,
@@ -183,6 +190,14 @@ impl PlayedCard {
         self.damage_counters > 0
     }
 
+    /// Keeps `double_grass_active` in sync with whether Jungle Totem is active for this
+    /// Pokemon's owner. Called by `State::refresh_double_grass_bonus_for_player` whenever
+    /// the owner's board composition changes.
+    pub(crate) fn refresh_double_grass_active(&mut self, jungle_totem_active_for_owner: bool) {
+        self.double_grass_active =
+            jungle_totem_active_for_owner && self.card.get_type() == Some(EnergyType::Grass);
+    }
+
     pub(crate) fn refresh_starting_plains_bonus(&mut self, starting_plains_active: bool) {
         let is_basic_pokemon = matches!(
             &self.card,
@@ -240,11 +255,16 @@ impl PlayedCard {
             amount,
         }) = get_ability_mechanic(&self.card)
         {
-            let matching_count = self
+            let mut matching_count = self
                 .attached_energy
                 .iter()
                 .filter(|e| *e == energy_type)
                 .count() as u32;
+            // Serperior's Jungle Totem: each [G] Energy attached to your [G] Pokemon provides
+            // 2 [G] Energy, so it doubles the count feeding this Pokemon's own HP-per-energy ability.
+            if *energy_type == EnergyType::Grass && self.double_grass_active {
+                matching_count *= 2;
+            }
             effective_hp += matching_count * amount;
         }
 
