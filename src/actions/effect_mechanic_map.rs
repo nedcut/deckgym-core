@@ -2020,7 +2020,13 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
     );
     // map.insert("Discard Water2 [W] Energy from this Pokémon. Your opponent's Active Pokémon is now Paralyzed.", todo_implementation);
     // map.insert("Discard a Stadium in play.", todo_implementation);
-    // map.insert("During your next turn, attacks used by your Pokémon do +20 damage to your opponent's Active Pokémon.", todo_implementation);
+    map.insert(
+        "During your next turn, attacks used by your Pokémon do +20 damage to your opponent's Active Pokémon.",
+        Mechanic::DamageAndTurnEffect {
+            effect: TurnEffect::IncreasedDamage { amount: 20 },
+            duration: 1,
+        },
+    );
     map.insert(
         "During your opponent's next turn, if this Pokémon is damaged by an attack, do 80 damage to the Attacking Pokémon.",
         Mechanic::DamageAndCardEffect {
