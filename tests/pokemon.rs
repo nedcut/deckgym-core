@@ -224,6 +224,8 @@ mod morpeko_test;
 mod nidoqueen_test;
 #[path = "pokemon/ninetales_ember_dance_test.rs"]
 mod ninetales_ember_dance_test;
+#[path = "pokemon/oricorio_happiny_damage_boost_test.rs"]
+mod oricorio_happiny_damage_boost_test;
 #[path = "pokemon/oricorio_yveltal_test.rs"]
 mod oricorio_yveltal_test;
 #[path = "pokemon/passimian_ex_offload_pass_test.rs"]
