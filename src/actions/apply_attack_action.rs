@@ -327,6 +327,9 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::ChanceStatusAttack { condition } => {
             damage_chance_status_attack(attack.fixed_damage, *condition)
         }
+        Mechanic::CoinFlipNoDamageOrStatusAttack { status } => {
+            coin_flip_no_damage_or_status_attack(attack.fixed_damage, *status)
+        }
         Mechanic::CoinFlipStatusOutcome {
             heads_status,
             tails_status,
@@ -595,6 +598,9 @@ fn forecast_effect_attack_by_mechanic(
             pokemon_name,
             *extra_damage,
         ),
+        Mechanic::ExtraDamageIfAnyBenchedDamaged { extra_damage } => {
+            extra_damage_if_any_benched_damaged(state, attack.fixed_damage, *extra_damage)
+        }
         Mechanic::ExtraDamagePerPokemonWithNameOnBench {
             pokemon_name,
             damage_per,
@@ -1734,6 +1740,15 @@ fn damage_chance_status_attack(damage: u32, status: StatusCondition) -> AttackOu
     AttackOutcomes::binary_coin(
         active_damage_effect_outcome(damage, build_status_effect(status)),
         active_damage_outcome(damage),
+    )
+}
+
+/// Drampa's Dragon Breath: on tails this attack does nothing (no damage at all); on heads deal
+/// the attack's fixed damage and inflict `status` on the opponent's Active.
+fn coin_flip_no_damage_or_status_attack(damage: u32, status: StatusCondition) -> AttackOutcomes {
+    AttackOutcomes::binary_coin(
+        active_damage_effect_outcome(damage, build_status_effect(status)),
+        active_damage_outcome(0),
     )
 }
 
@@ -3098,6 +3113,19 @@ fn extra_damage_if_pokemon_on_bench(
         .enumerate_bench_pokemon(state.current_player)
         .any(|(_, p)| p.get_name() == pokemon_name);
     if has_pokemon_on_bench {
+        active_damage_doutcome(base + extra)
+    } else {
+        active_damage_doutcome(base)
+    }
+}
+
+/// Drampa's Berserk: extra damage if any of the attacker's own Benched Pokémon already have
+/// damage on them.
+fn extra_damage_if_any_benched_damaged(state: &State, base: u32, extra: u32) -> AttackOutcomes {
+    let any_benched_damaged = state
+        .enumerate_bench_pokemon(state.current_player)
+        .any(|(_, p)| p.is_damaged());
+    if any_benched_damaged {
         active_damage_doutcome(base + extra)
     } else {
         active_damage_doutcome(base)

@@ -80,6 +80,11 @@ pub enum Mechanic {
     ChanceStatusAttack {
         condition: StatusCondition,
     },
+    /// Drampa's Dragon Breath: flip a coin; on tails this attack does nothing (no damage either).
+    /// On heads, deal the attack's fixed damage and inflict `status` on the opponent's Active.
+    CoinFlipNoDamageOrStatusAttack {
+        status: StatusCondition,
+    },
     /// Flip a coin; heads inflicts `heads_status`, tails inflicts `tails_status`, both on the
     /// opponent's Active (e.g. Lanturn ex).
     CoinFlipStatusOutcome {
@@ -461,6 +466,11 @@ pub enum Mechanic {
     },
     ExtraDamageIfPokemonOnBench {
         pokemon_name: String,
+        extra_damage: u32,
+    },
+    /// Drampa's Berserk: extra damage if any of the attacker's own Benched Pokémon already
+    /// have damage on them.
+    ExtraDamageIfAnyBenchedDamaged {
         extra_damage: u32,
     },
     /// Nidoqueen - Lovestrike: +'damage_per' for EACH benched Pokémon named 'pokemon_name'

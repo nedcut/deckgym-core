@@ -76,6 +76,8 @@ mod dedenne_surskit_test;
 mod delibird_test;
 #[path = "pokemon/dragonair_dragons_blessing_test.rs"]
 mod dragonair_dragons_blessing_test;
+#[path = "pokemon/drampa_test.rs"]
+mod drampa_test;
 #[path = "pokemon/drapion_a2_test.rs"]
 mod drapion_a2_test;
 #[path = "pokemon/durant_test.rs"]
