@@ -29,7 +29,7 @@ use crate::{
 };
 
 use super::{
-    attack_outcome::{AttackOutcome, AttackOutcomes},
+    attack_outcome::{AttackOutcome, AttackOutcomes, DamageTarget},
     mutations::{
         active_damage_doutcome, active_damage_effect_doutcome, active_damage_effect_outcome,
         active_damage_outcome, build_status_effect, damage_effect_doutcome,
@@ -567,6 +567,17 @@ fn forecast_effect_attack_by_mechanic(
             attack.fixed_damage,
             *damage,
             *must_have_energy,
+        ),
+        Mechanic::SelfDiscardRandomEnergyAndBenchDamage {
+            count,
+            opponent,
+            bench_damage,
+        } => self_discard_random_energy_and_bench_damage(
+            state,
+            attack.fixed_damage,
+            *count,
+            *opponent,
+            *bench_damage,
         ),
         Mechanic::AlsoChoiceBenchDamage { opponent, damage } => {
             also_choice_bench_damage(state, *opponent, attack.fixed_damage, *damage)
@@ -2984,6 +2995,42 @@ fn also_bench_damage(
         .collect();
     targets.push((active_damage, true, 0)); // Opponent's Active Pokémon is always index 0
     damage_effect_doutcome(targets, |_, _, _| {})
+}
+
+/// Walking Wake's Sweeping Billow: discard `count` random Energy from the attacking Pokémon,
+/// and this attack also does `bench_damage` to each of the chosen player's Benched Pokémon.
+fn self_discard_random_energy_and_bench_damage(
+    state: &State,
+    active_damage: u32,
+    count: usize,
+    opponent: bool,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let player = if opponent {
+        (state.current_player + 1) % 2
+    } else {
+        state.current_player
+    };
+    let mut targets: Vec<DamageTarget> = state
+        .enumerate_bench_pokemon(player)
+        .map(|(idx, _)| (bench_damage, opponent, idx))
+        .collect();
+    targets.push((active_damage, true, 0)); // Opponent's Active Pokémon is always index 0
+    damage_effect_doutcome(targets, move |rng, state, action| {
+        let active = state.get_active(action.actor);
+        let mut to_discard = Vec::new();
+        let mut remaining = active.attached_energy.clone();
+        for _ in 0..count {
+            if remaining.is_empty() {
+                break;
+            }
+            let idx = rng.gen_range(0..remaining.len());
+            to_discard.push(remaining.swap_remove(idx));
+        }
+        if !to_discard.is_empty() {
+            state.discard_from_active(action.actor, &to_discard);
+        }
+    })
 }
 
 /// Deals the same damage to all of opponent's Pokémon (active and bench) - like Spiritomb/Clawitzer

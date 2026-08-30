@@ -336,6 +336,8 @@ mod vulpix_tail_whip_test;
 mod wailord_ex_wondrous_waves_test;
 #[path = "pokemon/wailord_test.rs"]
 mod wailord_test;
+#[path = "pokemon/walking_wake_test.rs"]
+mod walking_wake_test;
 #[path = "pokemon/whiscash_test.rs"]
 mod whiscash_test;
 #[path = "pokemon/wugtrio_b2a_test.rs"]

@@ -430,6 +430,14 @@ pub enum Mechanic {
         damage: u32,
         must_have_energy: bool,
     },
+    /// Walking Wake's Sweeping Billow: discard `count` random Energy from the attacking
+    /// Pokémon, and this attack also does `bench_damage` to each of the chosen player's
+    /// Benched Pokémon (opponent = true → opponent's bench).
+    SelfDiscardRandomEnergyAndBenchDamage {
+        count: usize,
+        opponent: bool,
+        bench_damage: u32,
+    },
     AlsoChoiceBenchDamage {
         opponent: bool,
         damage: u32,

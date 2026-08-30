@@ -2577,6 +2577,15 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             extra_damage_by_heads: vec![0, 20, 50, 120],
         },
     );
+    // Walking Wake - Sweeping Billow
+    map.insert(
+        "Discard an Energy from this Pokémon, and this attack also does 20 damage to each of your opponent's Benched Pokémon.",
+        Mechanic::SelfDiscardRandomEnergyAndBenchDamage {
+            count: 1,
+            opponent: true,
+            bench_damage: 20,
+        },
+    );
     // Gouging Fire - Scorching Interruption
     map.insert(
         "Discard 2 Energy from this Pokémon. During your opponent's next turn, this Pokémon takes -30 damage from attacks.",
