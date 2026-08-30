@@ -914,7 +914,12 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
         effect: CardEffect::PreventAllDamageAndEffects,
         duration: 1,
     });
-    // map.insert("Flip a coin. If tails, this attack does nothing. If heads, your opponent's Active Pokémon is now Paralyzed.", todo_implementation);
+    map.insert(
+        "Flip a coin. If tails, this attack does nothing. If heads, your opponent's Active Pokémon is now Paralyzed.",
+        Mechanic::CoinFlipNoDamageOrStatusAttack {
+            status: StatusCondition::Paralyzed,
+        },
+    );
     // map.insert("Halve your opponent's Active Pokémon's remaining HP, rounded down.", todo_implementation);
     map.insert(
         "Heal 10 damage from this Pokémon.",
@@ -999,7 +1004,10 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             extra_damage: 40,
         },
     );
-    // map.insert("If any of your Benched Pokémon have damage on them, this attack does 50 more damage.", todo_implementation);
+    map.insert(
+        "If any of your Benched Pokémon have damage on them, this attack does 50 more damage.",
+        Mechanic::ExtraDamageIfAnyBenchedDamaged { extra_damage: 50 },
+    );
     map.insert("If any of your Pokémon were Knocked Out by damage from an attack during your opponent's last turn, this attack does 60 more damage.", Mechanic::ExtraDamageIfKnockedOutLastTurn { energy_type: None, extra_damage: 60 });
     map.insert("If any of your Pokémon were Knocked Out by damage from an attack during your opponent's last turn, this attack does 40 more damage.", Mechanic::ExtraDamageIfKnockedOutLastTurn { energy_type: None, extra_damage: 40 });
     map.insert("If any of your Pokémon were Knocked Out by damage from an attack during your opponent's last turn, this attack does 50 more damage.", Mechanic::ExtraDamageIfKnockedOutLastTurn { energy_type: None, extra_damage: 50 });
@@ -2568,6 +2576,29 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             num_coins: 3,
             extra_damage_by_heads: vec![0, 20, 50, 120],
         },
+    );
+    // Walking Wake - Sweeping Billow
+    map.insert(
+        "Discard an Energy from this Pokémon, and this attack also does 20 damage to each of your opponent's Benched Pokémon.",
+        Mechanic::SelfDiscardRandomEnergyAndBenchDamage {
+            count: 1,
+            opponent: true,
+            bench_damage: 20,
+        },
+    );
+    // Gouging Fire - Scorching Interruption
+    map.insert(
+        "Discard 2 Energy from this Pokémon. During your opponent's next turn, this Pokémon takes -30 damage from attacks.",
+        Mechanic::SelfDiscardRandomEnergyAndCardEffect {
+            count: 2,
+            effect: CardEffect::ReducedDamage { amount: 30 },
+            duration: 1,
+        },
+    );
+    // Raging Bolt - Baneful Boom
+    map.insert(
+        "Discard all Energy from this Pokémon. Knock Out your opponent's Active Pokémon.",
+        Mechanic::SelfDiscardAllEnergyAndKnockOutOpponentActive,
     );
 
     // B4 Mechanics

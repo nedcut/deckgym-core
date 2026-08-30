@@ -80,6 +80,11 @@ pub enum Mechanic {
     ChanceStatusAttack {
         condition: StatusCondition,
     },
+    /// Drampa's Dragon Breath: flip a coin; on tails this attack does nothing (no damage either).
+    /// On heads, deal the attack's fixed damage and inflict `status` on the opponent's Active.
+    CoinFlipNoDamageOrStatusAttack {
+        status: StatusCondition,
+    },
     /// Flip a coin; heads inflicts `heads_status`, tails inflicts `tails_status`, both on the
     /// opponent's Active (e.g. Lanturn ex).
     CoinFlipStatusOutcome {
@@ -191,6 +196,13 @@ pub enum Mechanic {
     },
     SelfDiscardEnergyAndCardEffect {
         energies: Vec<EnergyType>,
+        effect: CardEffect,
+        duration: u8,
+    },
+    /// Gouging Fire's Scorching Interruption: discard `count` random Energy from the attacking
+    /// Pokémon, then leave a `CardEffect` on it (e.g. reduced damage taken next turn).
+    SelfDiscardRandomEnergyAndCardEffect {
+        count: usize,
         effect: CardEffect,
         duration: u8,
     },
@@ -396,6 +408,9 @@ pub enum Mechanic {
         hp: u32,
     },
     SelfDiscardAllEnergy,
+    /// Raging Bolt's Baneful Boom: discard all Energy from the attacking Pokémon, then Knock Out
+    /// the opponent's Active Pokémon outright (no damage calculation involved).
+    SelfDiscardAllEnergyAndKnockOutOpponentActive,
     SelfDiscardAllTypeEnergy {
         energy_type: EnergyType,
     },
@@ -417,6 +432,14 @@ pub enum Mechanic {
         opponent: bool,
         damage: u32,
         must_have_energy: bool,
+    },
+    /// Walking Wake's Sweeping Billow: discard `count` random Energy from the attacking
+    /// Pokémon, and this attack also does `bench_damage` to each of the chosen player's
+    /// Benched Pokémon (opponent = true → opponent's bench).
+    SelfDiscardRandomEnergyAndBenchDamage {
+        count: usize,
+        opponent: bool,
+        bench_damage: u32,
     },
     AlsoChoiceBenchDamage {
         opponent: bool,
@@ -461,6 +484,11 @@ pub enum Mechanic {
     },
     ExtraDamageIfPokemonOnBench {
         pokemon_name: String,
+        extra_damage: u32,
+    },
+    /// Drampa's Berserk: extra damage if any of the attacker's own Benched Pokémon already
+    /// have damage on them.
+    ExtraDamageIfAnyBenchedDamaged {
         extra_damage: u32,
     },
     /// Nidoqueen - Lovestrike: +'damage_per' for EACH benched Pokémon named 'pokemon_name'

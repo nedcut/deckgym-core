@@ -29,7 +29,7 @@ use crate::{
 };
 
 use super::{
-    attack_outcome::{AttackOutcome, AttackOutcomes},
+    attack_outcome::{AttackOutcome, AttackOutcomes, DamageTarget},
     mutations::{
         active_damage_doutcome, active_damage_effect_doutcome, active_damage_effect_outcome,
         active_damage_outcome, build_status_effect, damage_effect_doutcome,
@@ -327,6 +327,9 @@ fn forecast_effect_attack_by_mechanic(
         Mechanic::ChanceStatusAttack { condition } => {
             damage_chance_status_attack(attack.fixed_damage, *condition)
         }
+        Mechanic::CoinFlipNoDamageOrStatusAttack { status } => {
+            coin_flip_no_damage_or_status_attack(attack.fixed_damage, *status)
+        }
         Mechanic::CoinFlipStatusOutcome {
             heads_status,
             tails_status,
@@ -458,6 +461,16 @@ fn forecast_effect_attack_by_mechanic(
             effect.clone(),
             *duration,
         ),
+        Mechanic::SelfDiscardRandomEnergyAndCardEffect {
+            count,
+            effect,
+            duration,
+        } => self_discard_random_energy_and_card_effect(
+            attack.fixed_damage,
+            *count,
+            effect.clone(),
+            *duration,
+        ),
         Mechanic::ExtraDamageIfExtraEnergy {
             required_extra_energy,
             extra_damage,
@@ -526,6 +539,9 @@ fn forecast_effect_attack_by_mechanic(
         }
         Mechanic::CoinFlipSetOpponentHpTo { hp } => coin_flip_set_opponent_hp(*hp),
         Mechanic::SelfDiscardAllEnergy => damage_and_discard_all_energy(attack.fixed_damage),
+        Mechanic::SelfDiscardAllEnergyAndKnockOutOpponentActive => {
+            self_discard_all_energy_and_knock_out_opponent_active()
+        }
         Mechanic::SelfDiscardAllTypeEnergy { energy_type } => {
             discard_all_energy_of_type_attack(attack.fixed_damage, *energy_type)
         }
@@ -554,6 +570,17 @@ fn forecast_effect_attack_by_mechanic(
             attack.fixed_damage,
             *damage,
             *must_have_energy,
+        ),
+        Mechanic::SelfDiscardRandomEnergyAndBenchDamage {
+            count,
+            opponent,
+            bench_damage,
+        } => self_discard_random_energy_and_bench_damage(
+            state,
+            attack.fixed_damage,
+            *count,
+            *opponent,
+            *bench_damage,
         ),
         Mechanic::AlsoChoiceBenchDamage { opponent, damage } => {
             also_choice_bench_damage(state, *opponent, attack.fixed_damage, *damage)
@@ -595,6 +622,9 @@ fn forecast_effect_attack_by_mechanic(
             pokemon_name,
             *extra_damage,
         ),
+        Mechanic::ExtraDamageIfAnyBenchedDamaged { extra_damage } => {
+            extra_damage_if_any_benched_damaged(state, attack.fixed_damage, *extra_damage)
+        }
         Mechanic::ExtraDamagePerPokemonWithNameOnBench {
             pokemon_name,
             damage_per,
@@ -1737,6 +1767,15 @@ fn damage_chance_status_attack(damage: u32, status: StatusCondition) -> AttackOu
     )
 }
 
+/// Drampa's Dragon Breath: on tails this attack does nothing (no damage at all); on heads deal
+/// the attack's fixed damage and inflict `status` on the opponent's Active.
+fn coin_flip_no_damage_or_status_attack(damage: u32, status: StatusCondition) -> AttackOutcomes {
+    AttackOutcomes::binary_coin(
+        active_damage_effect_outcome(damage, build_status_effect(status)),
+        active_damage_outcome(0),
+    )
+}
+
 /// Lanturn ex – Flash Cannon: heads inflicts `heads_status`, tails inflicts `tails_status`,
 /// both on the opponent's Active.
 fn coin_flip_status_outcome_attack(
@@ -2161,6 +2200,34 @@ fn self_discard_energy_and_card_effect(
 ) -> AttackOutcomes {
     active_damage_effect_doutcome(fixed_damage, move |_, state, action| {
         discard_requested_energy_from_active_best_effort(state, action.actor, &to_discard);
+        state
+            .get_active_mut(action.actor)
+            .add_effect(effect.clone(), duration);
+    })
+}
+
+/// Gouging Fire's Scorching Interruption: discard `count` random Energy from the attacking
+/// Pokémon, then leave a `CardEffect` on it.
+fn self_discard_random_energy_and_card_effect(
+    fixed_damage: u32,
+    count: usize,
+    effect: CardEffect,
+    duration: u8,
+) -> AttackOutcomes {
+    active_damage_effect_doutcome(fixed_damage, move |rng, state, action| {
+        let active = state.get_active(action.actor);
+        let mut to_discard = Vec::new();
+        let mut remaining = active.attached_energy.clone();
+        for _ in 0..count {
+            if remaining.is_empty() {
+                break;
+            }
+            let idx = rng.gen_range(0..remaining.len());
+            to_discard.push(remaining.swap_remove(idx));
+        }
+        if !to_discard.is_empty() {
+            state.discard_from_active(action.actor, &to_discard);
+        }
         state
             .get_active_mut(action.actor)
             .add_effect(effect.clone(), duration);
@@ -2686,6 +2753,19 @@ fn damage_and_discard_all_energy(damage: u32) -> AttackOutcomes {
     })
 }
 
+/// Raging Bolt's Baneful Boom: discard all Energy from the attacking Pokémon, then Knock Out
+/// the opponent's Active Pokémon outright.
+fn self_discard_all_energy_and_knock_out_opponent_active() -> AttackOutcomes {
+    active_damage_effect_doutcome(0, move |_, state, action| {
+        state.get_active_mut(action.actor).attached_energy.clear();
+
+        let opponent = (action.actor + 1) % 2;
+        let opponent_active = state.get_active_mut(opponent);
+        let remaining_hp = opponent_active.get_remaining_hp();
+        opponent_active.apply_damage(remaining_hp);
+    })
+}
+
 /// Porygon-Z's Buggy Beam: the Energy previewed in the opponent's Energy Zone becomes a
 /// uniformly random one of the 8 basic Energy types (i.e. every type the Energy Zone can
 /// generate), even if their deck declares no such Energy.
@@ -2933,6 +3013,42 @@ fn also_bench_damage(
     damage_effect_doutcome(targets, |_, _, _| {})
 }
 
+/// Walking Wake's Sweeping Billow: discard `count` random Energy from the attacking Pokémon,
+/// and this attack also does `bench_damage` to each of the chosen player's Benched Pokémon.
+fn self_discard_random_energy_and_bench_damage(
+    state: &State,
+    active_damage: u32,
+    count: usize,
+    opponent: bool,
+    bench_damage: u32,
+) -> AttackOutcomes {
+    let player = if opponent {
+        (state.current_player + 1) % 2
+    } else {
+        state.current_player
+    };
+    let mut targets: Vec<DamageTarget> = state
+        .enumerate_bench_pokemon(player)
+        .map(|(idx, _)| (bench_damage, opponent, idx))
+        .collect();
+    targets.push((active_damage, true, 0)); // Opponent's Active Pokémon is always index 0
+    damage_effect_doutcome(targets, move |rng, state, action| {
+        let active = state.get_active(action.actor);
+        let mut to_discard = Vec::new();
+        let mut remaining = active.attached_energy.clone();
+        for _ in 0..count {
+            if remaining.is_empty() {
+                break;
+            }
+            let idx = rng.gen_range(0..remaining.len());
+            to_discard.push(remaining.swap_remove(idx));
+        }
+        if !to_discard.is_empty() {
+            state.discard_from_active(action.actor, &to_discard);
+        }
+    })
+}
+
 /// Deals the same damage to all of opponent's Pokémon (active and bench) - like Spiritomb/Clawitzer
 fn damage_all_opponent_pokemon(state: &State, damage: u32) -> AttackOutcomes {
     let opponent = (state.current_player + 1) % 2;
@@ -3098,6 +3214,19 @@ fn extra_damage_if_pokemon_on_bench(
         .enumerate_bench_pokemon(state.current_player)
         .any(|(_, p)| p.get_name() == pokemon_name);
     if has_pokemon_on_bench {
+        active_damage_doutcome(base + extra)
+    } else {
+        active_damage_doutcome(base)
+    }
+}
+
+/// Drampa's Berserk: extra damage if any of the attacker's own Benched Pokémon already have
+/// damage on them.
+fn extra_damage_if_any_benched_damaged(state: &State, base: u32, extra: u32) -> AttackOutcomes {
+    let any_benched_damaged = state
+        .enumerate_bench_pokemon(state.current_player)
+        .any(|(_, p)| p.is_damaged());
+    if any_benched_damaged {
         active_damage_doutcome(base + extra)
     } else {
         active_damage_doutcome(base)
