@@ -199,6 +199,13 @@ pub enum Mechanic {
         effect: CardEffect,
         duration: u8,
     },
+    /// Gouging Fire's Scorching Interruption: discard `count` random Energy from the attacking
+    /// Pokémon, then leave a `CardEffect` on it (e.g. reduced damage taken next turn).
+    SelfDiscardRandomEnergyAndCardEffect {
+        count: usize,
+        effect: CardEffect,
+        duration: u8,
+    },
     ExtraDamageIfExtraEnergy {
         required_extra_energy: Vec<EnergyType>,
         extra_damage: u32,

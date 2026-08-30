@@ -461,6 +461,16 @@ fn forecast_effect_attack_by_mechanic(
             effect.clone(),
             *duration,
         ),
+        Mechanic::SelfDiscardRandomEnergyAndCardEffect {
+            count,
+            effect,
+            duration,
+        } => self_discard_random_energy_and_card_effect(
+            attack.fixed_damage,
+            *count,
+            effect.clone(),
+            *duration,
+        ),
         Mechanic::ExtraDamageIfExtraEnergy {
             required_extra_energy,
             extra_damage,
@@ -2176,6 +2186,34 @@ fn self_discard_energy_and_card_effect(
 ) -> AttackOutcomes {
     active_damage_effect_doutcome(fixed_damage, move |_, state, action| {
         discard_requested_energy_from_active_best_effort(state, action.actor, &to_discard);
+        state
+            .get_active_mut(action.actor)
+            .add_effect(effect.clone(), duration);
+    })
+}
+
+/// Gouging Fire's Scorching Interruption: discard `count` random Energy from the attacking
+/// Pokémon, then leave a `CardEffect` on it.
+fn self_discard_random_energy_and_card_effect(
+    fixed_damage: u32,
+    count: usize,
+    effect: CardEffect,
+    duration: u8,
+) -> AttackOutcomes {
+    active_damage_effect_doutcome(fixed_damage, move |rng, state, action| {
+        let active = state.get_active(action.actor);
+        let mut to_discard = Vec::new();
+        let mut remaining = active.attached_energy.clone();
+        for _ in 0..count {
+            if remaining.is_empty() {
+                break;
+            }
+            let idx = rng.gen_range(0..remaining.len());
+            to_discard.push(remaining.swap_remove(idx));
+        }
+        if !to_discard.is_empty() {
+            state.discard_from_active(action.actor, &to_discard);
+        }
         state
             .get_active_mut(action.actor)
             .add_effect(effect.clone(), duration);

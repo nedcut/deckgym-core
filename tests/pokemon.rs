@@ -110,6 +110,8 @@ mod gardevoir_psy_turbo_test;
 mod gigalith_ex_megaton_cannon_test;
 #[path = "pokemon/giratina_rayquaza_test.rs"]
 mod giratina_rayquaza_test;
+#[path = "pokemon/gouging_fire_test.rs"]
+mod gouging_fire_test;
 #[path = "pokemon/grovyle_slicing_snipe_test.rs"]
 mod grovyle_slicing_snipe_test;
 #[path = "pokemon/growlithe_puppy_pile_test.rs"]
