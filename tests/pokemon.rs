@@ -256,6 +256,8 @@ mod psyduck_b4_test;
 mod psyduck_test;
 #[path = "pokemon/purrloin_test.rs"]
 mod purrloin_test;
+#[path = "pokemon/raging_bolt_test.rs"]
+mod raging_bolt_test;
 #[path = "pokemon/raichu_evoshock_test.rs"]
 mod raichu_evoshock_test;
 #[path = "pokemon/rampardos_head_smash_test.rs"]

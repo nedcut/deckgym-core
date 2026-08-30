@@ -408,6 +408,9 @@ pub enum Mechanic {
         hp: u32,
     },
     SelfDiscardAllEnergy,
+    /// Raging Bolt's Baneful Boom: discard all Energy from the attacking Pokémon, then Knock Out
+    /// the opponent's Active Pokémon outright (no damage calculation involved).
+    SelfDiscardAllEnergyAndKnockOutOpponentActive,
     SelfDiscardAllTypeEnergy {
         energy_type: EnergyType,
     },

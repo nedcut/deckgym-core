@@ -2595,6 +2595,11 @@ pub static EFFECT_MECHANIC_MAP: LazyLock<HashMap<&'static str, Mechanic>> = Lazy
             duration: 1,
         },
     );
+    // Raging Bolt - Baneful Boom
+    map.insert(
+        "Discard all Energy from this Pokémon. Knock Out your opponent's Active Pokémon.",
+        Mechanic::SelfDiscardAllEnergyAndKnockOutOpponentActive,
+    );
 
     // B4 Mechanics
     // Vespiquen ex - Chase Order

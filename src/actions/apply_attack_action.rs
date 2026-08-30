@@ -539,6 +539,9 @@ fn forecast_effect_attack_by_mechanic(
         }
         Mechanic::CoinFlipSetOpponentHpTo { hp } => coin_flip_set_opponent_hp(*hp),
         Mechanic::SelfDiscardAllEnergy => damage_and_discard_all_energy(attack.fixed_damage),
+        Mechanic::SelfDiscardAllEnergyAndKnockOutOpponentActive => {
+            self_discard_all_energy_and_knock_out_opponent_active()
+        }
         Mechanic::SelfDiscardAllTypeEnergy { energy_type } => {
             discard_all_energy_of_type_attack(attack.fixed_damage, *energy_type)
         }
@@ -2747,6 +2750,19 @@ fn damage_and_discard_all_energy(damage: u32) -> AttackOutcomes {
     active_damage_effect_doutcome(damage, move |_, state, action| {
         let active = state.get_active_mut(action.actor);
         active.attached_energy.clear(); // Discard all energy
+    })
+}
+
+/// Raging Bolt's Baneful Boom: discard all Energy from the attacking Pokémon, then Knock Out
+/// the opponent's Active Pokémon outright.
+fn self_discard_all_energy_and_knock_out_opponent_active() -> AttackOutcomes {
+    active_damage_effect_doutcome(0, move |_, state, action| {
+        state.get_active_mut(action.actor).attached_energy.clear();
+
+        let opponent = (action.actor + 1) % 2;
+        let opponent_active = state.get_active_mut(opponent);
+        let remaining_hp = opponent_active.get_remaining_hp();
+        opponent_active.apply_damage(remaining_hp);
     })
 }
 
