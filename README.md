@@ -68,20 +68,26 @@ exported_data/
 ├── <game_id_1>/
 │   ├── ply_0000.json
 │   ├── ply_0001.json
-│   └── ...
+│   ├── ...
+│   └── outcome.json
 ├── <game_id_2>/
 │   ├── ply_0000.json
-│   └── ...
+│   ├── ...
+│   └── outcome.json
 └── ...
 ```
 
-Each JSON file contains:
+Each `ply_*.json` file contains:
 - `game_id`: UUID of the game
 - `ply`: Sequential decision point number
 - `actor`: Which player (0 or 1) made the decision
 - `state`: Complete game state (hands, decks, in-play Pokemon, etc.)
 - `playable_actions`: All available actions at this decision point
 - `chosen_action`: The action that was actually taken
+
+Ply states are captured before each action, so none of them hold the final result. `outcome.json` records it once per game:
+- `game_id`: UUID of the game
+- `result`: `{"Win": 0}`, `{"Win": 1}`, `"Tie"`, or `null` if the game did not finish
 
 ### Processing the Data
 

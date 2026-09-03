@@ -9,7 +9,34 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+
+
+def load_game_outcome(game_folder: Path) -> Optional[Dict[str, Any]]:
+    """
+    Load the terminal result of a game, written once by the exporter when the
+    game ends. Ply files only contain pre-action states, so this is the only
+    place the winner is recorded.
+
+    The `result` field is the serde encoding of `Option<GameOutcome>`:
+    {"Win": 0}, {"Win": 1}, "Tie", or null when the game was cut short.
+    """
+    outcome_file = game_folder / "outcome.json"
+    if not outcome_file.exists():
+        return None
+    with open(outcome_file, 'r') as f:
+        return json.load(f)
+
+
+def describe_outcome(outcome: Optional[Dict[str, Any]]) -> str:
+    if outcome is None:
+        return "unknown (no outcome.json)"
+    result = outcome.get('result')
+    if result is None:
+        return "unfinished"
+    if result == "Tie":
+        return "tie"
+    return f"player {result['Win']} wins"
 
 
 def load_game_data(game_folder: Path) -> List[Dict[str, Any]]:
@@ -50,8 +77,9 @@ def extract_features(state: Dict[str, Any]) -> Dict[str, Any]:
         'player_0_pokemon_count': sum(1 for p in state['in_play_pokemon'][0] if p is not None),
         'player_1_pokemon_count': sum(1 for p in state['in_play_pokemon'][1] if p is not None),
 
-        # Current energy available
-        'current_energy': state['current_energy'],
+        # Energy zone: the energy available this turn and the one queued next
+        'player_0_current_energy': state['energy_zone'][0]['current'],
+        'player_1_current_energy': state['energy_zone'][1]['current'],
 
         # Turn flags
         'has_played_support': state['has_played_support'],
@@ -83,13 +111,18 @@ def process_exported_data(data_folder: Path):
     print()
 
     total_plys = 0
+    outcome_counts: Dict[str, int] = {}
 
     for game_folder in game_folders:
         game_id = game_folder.name
         game_data = load_game_data(game_folder)
+        outcome = load_game_outcome(game_folder)
+        outcome_label = describe_outcome(outcome)
+        outcome_counts[outcome_label] = outcome_counts.get(outcome_label, 0) + 1
 
         print(f"Game {game_id}:")
         print(f"  Total plys: {len(game_data)}")
+        print(f"  Outcome: {outcome_label}")
 
         total_plys += len(game_data)
 
@@ -106,6 +139,8 @@ def process_exported_data(data_folder: Path):
         print()
 
     print(f"Total plys across all games: {total_plys}")
+    for label, count in sorted(outcome_counts.items()):
+        print(f"  {label}: {count}")
     print()
     print("You can now use this data to:")
     print("  1. Build feature vectors from the state")
